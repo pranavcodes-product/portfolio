@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<a class="pf-back" href="../index.html#projects" onclick="if(document.referrer&&history.length>1){history.back();return false}">&larr; Portfolio</a>
+<title>Loopline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Loopline: a tool-agnostic customer discovery agent. Calls in, requirements out, and every customer sees their feedback move. Demo with fictional data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell. Left rail of views, a working canvas on the right. The signature element is the Loop line, a transit-style track of discovery stages with marigold snapshot pins. */
+:root{
+  --bg:#F3F4F5; --surface:#FFFFFF; --surface-2:#EAEBEC; --ink:#101112; --muted:#474B50; --line:#DADCDE;
+  --accent:#4338CA; --accent-ink:#FFFFFF; --accent-soft:#E8E7FC;
+  --signal:#4338CA; --signal-soft:#E8E7FC;
+  --good:#303437; --good-soft:#EAEBEC; --warn:#4338CA; --warn-soft:#E8E7FC; --bad:#B42318; --bad-soft:#F6DFDB; --info:#474B50; --info-soft:#EAEBEC;
+  --shadow:0 1px 2px rgba(15,17,19,.06),0 6px 18px rgba(15,17,19,.06);
+  --f-display:'IBM Plex Sans',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:2px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C0D0E; --surface:#141617; --surface-2:#1B1D1F; --ink:#ECEEEF; --muted:#A8ADB2; --line:#272A2D;
+  --accent:#A5B4FC; --accent-ink:#0C0D0E; --accent-soft:#1C1D3D;
+  --signal:#A5B4FC; --signal-soft:#1C1D3D;
+  --good:#CACDD0; --good-soft:#1B1D1F; --warn:#A5B4FC; --warn-soft:#1C1D3D; --bad:#FF7A6E; --bad-soft:#3A1915; --info:#A8ADB2; --info-soft:#1B1D1F;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0C0D0E; --surface:#141617; --surface-2:#1B1D1F; --ink:#ECEEEF; --muted:#A8ADB2; --line:#272A2D;
+  --accent:#A5B4FC; --accent-ink:#0C0D0E; --accent-soft:#1C1D3D;
+  --signal:#A5B4FC; --signal-soft:#1C1D3D;
+  --good:#CACDD0; --good-soft:#1B1D1F; --warn:#A5B4FC; --warn-soft:#1C1D3D; --bad:#FF7A6E; --bad-soft:#3A1915; --info:#A8ADB2; --info-soft:#1B1D1F;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(1.6rem,1.2rem + 1.4vw,2.2rem);font-weight:700}
+h2{font-size:1.2rem;font-weight:700}
+h3{font-size:1rem;font-weight:600;font-family:var(--f-body)}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+
+/* shell */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.top-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:700;font-size:1.2rem;letter-spacing:-.02em}
+.brand svg{flex:none}
+.demo-tag{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--signal);background:var(--signal-soft);padding:3px 8px;border-radius:2px}
+.top-spacer{flex:1}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:2px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:5px 10px;border-radius:2px;font-size:.85rem;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+.engine{font-size:.78rem;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.engine i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.engine.ai i{background:var(--good)}
+.app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100vh - 60px)}
+.rail{border-right:1px solid var(--line);padding:18px 12px;background:var(--surface)}
+.rail nav{display:flex;flex-direction:column;gap:2px;position:sticky;top:76px}
+.rail a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:2px;color:var(--muted);text-decoration:none;font-weight:500;font-size:.93rem}
+.rail a:hover{background:var(--surface-2);color:var(--ink)}
+.rail a[aria-current="page"]{background:var(--accent-soft);color:var(--ink)}
+.rail a[aria-current="page"] svg{color:var(--accent)}
+.rail .sep{height:1px;background:var(--line);margin:10px 6px}
+.rail .acct{font-size:.86rem;padding:6px 10px}
+.rail .acct .mini{margin-left:auto}
+main{min-width:0;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.portal-mode .rail{display:none}
+.portal-mode .app{grid-template-columns:minmax(0,1fr)}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{border-right:0;border-bottom:1px solid var(--line);padding:8px 0;overflow-x:auto}
+  .rail nav{flex-direction:row;position:static;padding-inline:max(12px,env(safe-area-inset-left,0px))}
+  .rail a{white-space:nowrap}
+  .rail .sep,.rail .acct,.rail .rail-label{display:none}
+}
+
+/* primitives */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px}
+.grid2 > *{min-width:0}
+@media (max-width:980px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);padding:8px 13px;border-radius:2px;cursor:pointer;font-weight:500;font-size:.9rem;text-decoration:none;color:var(--ink);line-height:1.2}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn.sm{padding:5px 9px;font-size:.82rem}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:2px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st-Captured{background:var(--surface-2);color:var(--muted)}
+.st-Planned{background:var(--info-soft);color:var(--info)}
+.st-In-progress{background:var(--warn-soft);color:var(--warn)}
+.st-Shipped{background:var(--good-soft);color:var(--good)}
+.pr{font-size:.75rem;font-weight:600;font-family:var(--f-mono)}
+.pr-High{color:var(--bad)} .pr-Medium{color:var(--warn)} .pr-Low{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:.76rem;padding:2px 7px;border-radius:2px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);white-space:nowrap}
+.chip.type-internal{background:var(--signal-soft);border-color:transparent;color:var(--signal)}
+.chip.type-customer{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:.84rem;font-weight:600;color:var(--muted)}
+input[type=text],input[type=date],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:2px;padding:8px 10px;font-size:.93rem;width:100%;color:var(--ink)}
+textarea{min-height:240px;resize:vertical;font-family:var(--f-mono);font-size:.84rem;line-height:1.5}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td select{width:auto;padding:4px 8px;font-size:.82rem}
+.rowlink{color:var(--ink);text-decoration:none;font-weight:600}
+.rowlink:hover{color:var(--accent)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.kpi b{font-family:var(--f-display);font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi small{color:var(--muted);font-size:.8rem}
+
+/* Loop line */
+.loopwrap{overflow-x:auto;padding:6px 2px 2px}
+.loop{list-style:none;margin:0;padding:26px 0 0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));position:relative;min-width:620px;--p:0}
+.loop::before,.loop::after{content:"";position:absolute;top:calc(26px + 9px);left:calc(100%/14);height:4px;border-radius:2px}
+.loop::before{right:calc(100%/14);background:var(--surface-2)}
+.loop::after{width:calc((100% - 100%/7) * var(--p));background:var(--accent);transition:width .6s cubic-bezier(.2,.7,.2,1)}
+.loop li{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;text-align:center}
+.loop .dot{width:22px;height:22px;border-radius:50%;background:var(--surface);border:4px solid var(--surface-2);display:grid;place-items:center}
+.loop .done .dot{border-color:var(--accent);background:var(--accent)}
+.loop .current .dot{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 5px var(--accent-soft)}
+.loop .lbl{font-size:.78rem;font-weight:600;color:var(--muted);line-height:1.2;max-width:92px}
+.loop .done .lbl,.loop .current .lbl{color:var(--ink)}
+.loop .pin{position:absolute;top:-24px;display:inline-flex;align-items:center;gap:3px;font-family:var(--f-mono);font-size:.7rem;color:var(--signal);font-weight:500}
+.loop .pin::before{content:"";width:8px;height:8px;background:var(--signal);transform:rotate(45deg);border-radius:1px}
+.mini{display:inline-flex;gap:3px;align-items:center}
+.mini i{width:7px;height:7px;border-radius:50%;background:var(--surface-2);display:block}
+.mini i.on{background:var(--accent)}
+.mini i.cur{background:var(--surface);box-shadow:inset 0 0 0 2px var(--accent)}
+
+/* snapshots */
+.snaps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.snaps li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;position:relative;padding-bottom:16px}
+.snaps li::before{content:"";position:absolute;left:8px;top:16px;bottom:0;width:2px;background:var(--line)}
+.snaps li:last-child::before{display:none}
+.snaps .d{width:10px;height:10px;background:var(--signal);transform:rotate(45deg);margin:6px 0 0 4px;border-radius:1px}
+.snaps .meta{font-size:.78rem;color:var(--muted);font-family:var(--f-mono)}
+.delta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.delta span{font-family:var(--f-mono);font-size:.74rem;padding:1px 6px;border-radius:2px;background:var(--surface-2)}
+.delta .up{color:var(--good)}
+
+/* lists */
+.ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ul li{display:flex;gap:10px;align-items:flex-start}
+.ul li .src{margin-left:auto;font-family:var(--f-mono);font-size:.72rem;color:var(--muted);white-space:nowrap}
+.quote{border-left:3px solid var(--signal);padding:4px 0 4px 12px;font-size:.95rem}
+.quote cite{display:block;font-style:normal;font-size:.78rem;color:var(--muted);margin-top:3px}
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.feed li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:.9rem}
+.feed .k{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);padding-top:2px;white-space:nowrap}
+details.call{border:1px solid var(--line);border-radius:2px;padding:10px 12px}
+details.call + details.call{margin-top:8px}
+details.call summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;list-style:none}
+details.call summary::-webkit-details-marker{display:none}
+details.call pre{white-space:pre-wrap;font-family:var(--f-mono);font-size:.8rem;background:var(--surface-2);padding:10px;border-radius:2px;margin:10px 0 0;max-height:260px;overflow:auto}
+
+/* ingest */
+.steps{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+@media (max-width:980px){.steps{grid-template-columns:minmax(0,1fr)}}
+.stepno{font-family:var(--f-mono);font-size:.74rem;color:var(--accent);font-weight:500}
+.form{display:flex;flex-direction:column;gap:12px}
+.form .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:520px){.form .two{grid-template-columns:minmax(0,1fr)}}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:2px;border:1px solid var(--line);font-size:.9rem}
+.check input{margin-top:4px;accent-color:var(--accent)}
+.check + .check{margin-top:6px}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:28px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:8px;align-items:center}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+
+/* doc */
+.doc{max-width:72ch}
+.doc h1{font-size:1.6rem;margin:0 0 8px}
+.doc h2{font-size:1.1rem;margin:22px 0 8px}
+.doc h3{margin:14px 0 6px}
+.doc p,.doc li{font-size:.95rem}
+.doc p{margin:0 0 10px}
+.doc ul,.doc ol{margin:0 0 10px;padding-left:22px}
+.doc table{margin:6px 0 12px;font-size:.85rem}
+.doc code{font-family:var(--f-mono);font-size:.85em;background:var(--surface-2);padding:1px 5px;border-radius:2px}
+.doc blockquote{margin:0 0 10px;border-left:3px solid var(--signal);padding-left:12px;color:var(--ink)}
+
+/* connectors */
+.conns{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.conn{display:flex;flex-direction:column;gap:10px}
+.conn .head{display:flex;gap:12px;align-items:center}
+.mono-ico{width:38px;height:38px;border-radius:2px;display:grid;place-items:center;color:#fff;font-family:var(--f-display);font-weight:700;font-size:.95rem;flex:none}
+.conn .foot{display:flex;gap:8px;align-items:center;margin-top:auto;flex-wrap:wrap}
+.on-dot{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--good)}
+.on-dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.cat-h{margin:6px 0 -4px}
+
+/* csat */
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:28px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:.85rem}
+.bar .t{height:12px;border-radius:2px;background:var(--surface-2);overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.scores{display:flex;gap:8px;flex-wrap:wrap}
+.scores button{width:52px;height:52px;border-radius:2px;border:1px solid var(--line);background:var(--surface);font-family:var(--f-display);font-weight:700;font-size:1.2rem;cursor:pointer}
+.scores button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.score-lbls{display:flex;justify-content:space-between;max-width:292px;font-size:.75rem;color:var(--muted)}
+
+/* portal */
+.portal-hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:16px}
+.progress{height:10px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent)}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.board{grid-template-columns:minmax(0,1fr)}}
+.col{background:var(--surface-2);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.col h3{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:9px 10px;font-size:.88rem;display:flex;flex-direction:column;gap:5px}
+
+/* how */
+.arch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:stretch}
+@media (max-width:860px){.arch{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.arch div{border:1px solid var(--line);border-radius:2px;padding:12px;background:var(--surface-2);font-size:.86rem}
+.arch b{display:block;font-family:var(--f-display);margin-bottom:4px}
+pre.code{background:var(--surface-2);border-radius:2px;padding:12px 14px;overflow-x:auto;font-family:var(--f-mono);font-size:.8rem;line-height:1.5;margin:0}
+.names{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.names{grid-template-columns:minmax(0,1fr)}}
+.names div{border:1px solid var(--line);border-radius:2px;padding:12px}
+.names .pick{border-color:var(--accent);background:var(--accent-soft)}
+
+/* overlay */
+.modal-bg{position:fixed;inset:0;background:rgba(8,9,10,.45);z-index:50;display:grid;place-items:center;padding:16px}
+.modal{background:var(--surface);border-radius:2px;max-width:520px;width:100%;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow:auto}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:2px;font-size:.9rem;z-index:60;max-width:calc(100vw - 32px);box-shadow:var(--shadow)}
+.spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.fade{animation:fd .35s ease both}
+@keyframes fd{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Portfolio copy: back link and phone touch targets */
+.pf-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;margin:8px 12px 0;border-radius:2px;border:1px solid var(--line);background:var(--surface);color:var(--fg,var(--ink));font:600 14px/1 var(--font-sans,system-ui);text-decoration:none}
+.pf-back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (pointer:coarse){
+  button,select,summary,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]){min-height:44px}
+  nav a,a.brand,.brand,a.btn,.rowlink{min-height:44px;display:inline-flex;align-items:center}
+}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#overview" aria-label="Loopline home">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M3 18h9a6 6 0 1 0-6-6v2" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="18" r="3" fill="var(--signal)"/><path d="M12 18h6" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/></svg>
+      Loopline
+    </a>
+    <span class="demo-tag">Demo · fictional data</span>
+    <span class="top-spacer"></span>
+    <div class="seg" role="group" aria-label="Workspace filter" id="modeSeg">
+      <button type="button" data-act="mode" data-v="all">All</button>
+      <button type="button" data-act="mode" data-v="customer">Customers</button>
+      <button type="button" data-act="mode" data-v="internal">Internal</button>
+    </div>
+    <span class="engine" id="engine" title="Which engine writes insights and documents"><i></i><span>Templates</span></span>
+    <button class="btn sm ghost" type="button" data-act="reset" id="resetBtn">Reset demo</button>
+  </div>
+</header>
+<div class="app" id="app">
+  <aside class="rail" aria-label="Views">
+    <nav id="nav"></nav>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div id="overlay"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+(function(){
+'use strict';
+const STAGES=['Kickoff','Discovery calls','Synthesis','Requirements','Build','Validate','Loop closed'];
+const STATUSES=['Captured','Planned','In progress','Shipped'];
+const LS='loopline.demo.v1';
+const CONNECTORS=[
+ {id:'jira',name:'Jira',cat:'Work tracking',mono:'J',hue:'#6E757C',target:'Project key',def:'DISC',map:[['To Do','Planned'],['In Progress','In progress'],['Done','Shipped']],desc:'Push requests as issues. Pull status back to customers.'},
+ {id:'linear',name:'Linear',cat:'Work tracking',mono:'L',hue:'#6F767D',target:'Team key',def:'DSC',map:[['Backlog','Planned'],['In Progress','In progress'],['Done','Shipped']],desc:'Create issues from requests and mirror cycle progress.'},
+ {id:'ado',name:'Azure DevOps',cat:'Work tracking',mono:'Az',hue:'#6B7278',target:'Area path',def:'Product\\Discovery',map:[['New','Planned'],['Active','In progress'],['Closed','Shipped']],desc:'Map requests to work items in any area path.'},
+ {id:'github',name:'GitHub Issues',cat:'Source control',mono:'GH',hue:'#42464B',target:'Repository',def:'acme/product',map:[['Open','Planned'],['Label: in-progress','In progress'],['Closed','Shipped']],desc:'Open issues with call evidence attached.'},
+ {id:'gitlab',name:'GitLab',cat:'Source control',mono:'GL',hue:'#6B7178',target:'Project path',def:'acme/product',map:[['Opened','Planned'],['Doing','In progress'],['Closed','Shipped']],desc:'Track requests as GitLab issues and epics.'},
+ {id:'asana',name:'Asana',cat:'Work tracking',mono:'As',hue:'#6B7278',target:'Project',def:'Customer Requests',map:[['Backlog','Planned'],['Doing','In progress'],['Complete','Shipped']],desc:'Turn requests into tasks in any Asana project.'},
+ {id:'bitbucket',name:'Bitbucket',cat:'Source control',mono:'Bb',hue:'#676E75',target:'Repository',def:'acme/product',map:[['Open','Planned'],['In progress','In progress'],['Resolved','Shipped']],desc:'Create issues in Bitbucket Cloud or Data Center.'},
+ {id:'servicenow',name:'ServiceNow',cat:'ITSM',mono:'SN',hue:'#5F656B',target:'Assignment group',def:'Product Feedback',map:[['New','Captured'],['Work in Progress','In progress'],['Resolved','Shipped']],desc:'Import enhancement requests from incidents as signals.'},
+ {id:'jsm',name:'Jira Service Management',cat:'ITSM',mono:'JS',hue:'#686F76',target:'Service project',def:'IT Requests',map:[['Waiting for support','Captured'],['In progress','In progress'],['Resolved','Shipped']],desc:'Treat enhancement requests from the service desk as signals.'},
+ {id:'freshservice',name:'Freshservice',cat:'ITSM',mono:'Fs',hue:'#50565B',target:'Group',def:'Change Advisory',map:[['Open','Captured'],['In Progress','In progress'],['Closed','Shipped']],desc:'Sync service requests and changes both ways.'},
+ {id:'zendesk',name:'Zendesk',cat:'ITSM',mono:'Z',hue:'#494E53',target:'Tag filter',def:'feature_request',map:[['Open','Captured'],['Pending','In progress'],['Solved','Shipped']],desc:'Turn tagged tickets into discovery signals.'},
+ {id:'slack',name:'Slack',cat:'Messaging',mono:'S',hue:'#585E63',target:'Channel',def:'#customer-discovery',map:null,desc:'Post call summaries and weekly digests.'},
+ {id:'teams',name:'Microsoft Teams',cat:'Messaging',mono:'T',hue:'#6C737A',target:'Channel',def:'Customer Discovery',map:null,desc:'Share snapshots and alerts with account teams.'},
+ {id:'zoom',name:'Zoom',cat:'Call capture',mono:'Zm',hue:'#6F767D',target:'Recording folder',def:'Cloud recordings',map:null,desc:'Pull recordings and transcripts after each call.'},
+ {id:'meet',name:'Google Meet',cat:'Call capture',mono:'M',hue:'#4D5257',target:'Drive folder',def:'Meet Recordings',map:null,desc:'Ingest Meet transcripts from Drive.'},
+ {id:'custom',name:'Any tool (REST or webhook)',cat:'Custom',mono:'{ }',hue:'#62686F',target:'Endpoint name',def:'internal-tracker',map:[['open','Planned'],['active','In progress'],['done','Shipped']],desc:'Bring your own tracker. Map its statuses once and Loopline treats it like any other tool.'}
+];
+const CONN=Object.fromEntries(CONNECTORS.map(c=>[c.id,c]));
+const DEST=CONNECTORS.filter(c=>c.map).map(c=>c.id); // any tool with a status map can receive requests
+const ITSM=CONNECTORS.filter(c=>c.cat==='ITSM').map(c=>c.id);
+
+const SAMPLE_CALL=`Sam Rivera (PM, us): Thanks for making time, Maya. Last call you said referral intake was the biggest headache. Can you walk me through a typical week?
+Maya Chen (Helio, Director of Clinical Ops): Sure. Every Monday my team pulls referral data from three systems and pastes it into one spreadsheet. It takes about six hours and it is error-prone.
+Sam Rivera (PM, us): What happens when something goes wrong?
+Maya Chen (Helio, Director of Clinical Ops): We usually find out from a frustrated clinic manager. Nobody knows which version of the sheet is current, so we lose track of referrals.
+Jordan Lee (Helio, IT Manager): From the IT side, every integration request goes into ServiceNow and then disappears. We never hear back on status.
+Sam Rivera (PM, us): If you could change one thing tomorrow, what would it be?
+Maya Chen (Helio, Director of Clinical Ops): I wish we could see referral volume by clinic in one dashboard without exporting anything.
+Jordan Lee (Helio, IT Manager): We need audit logs for every data pull. That is a must for our HIPAA review before renewal.
+Maya Chen (Helio, Director of Clinical Ops): It would be great if alerts went to our Teams channel when a referral sits untouched for more than two days.
+Jordan Lee (Helio, IT Manager): Also, single sign-on with Okta. Managing separate passwords is painful for 40 coordinators.
+Sam Rivera (PM, us): How would you measure success six months from now?
+Maya Chen (Helio, Director of Clinical Ops): Getting those six hours back every week and no more missed referrals. That would make my team really happy.
+Jordan Lee (Helio, IT Manager): And for me, seeing where our requests stand without chasing anyone.
+Sam Rivera (PM, us): That is really helpful. I will share a summary, and you can follow progress in your portal.`;
+
+/* ---------- storage ---------- */
+function store(){try{return window.localStorage}catch(e){return null}}
+function load(){try{const s=store();const raw=s&&s.getItem(LS);return raw?JSON.parse(raw):null}catch(e){return null}}
+function save(){try{const s=store();if(s)s.setItem(LS,JSON.stringify(S))}catch(e){}}
+
+function seed(){
+ const R=(id,title,priority,status,link,source,updated,tool)=>({id,title,priority,status,link:link||null,tool:link?(tool||'jira'):null,source,updated});
+ return {
+  v:2, mode:'all', seq:128, ui:{ingestAccount:'helio',docAccount:'northwind',docType:'PRD'},
+  connectors:{jira:{on:true,target:'DISC',lastSync:'2026-11-06'},servicenow:{on:true,target:'Product Feedback',lastSync:'2026-11-06'},github:{on:true,target:'acme/platform',lastSync:'2026-11-05'},slack:{on:true,target:'#customer-discovery',lastSync:'2026-11-06'},zoom:{on:true,target:'Cloud recordings',lastSync:'2026-11-06'}},
+  itsmQueue:0,
+  accounts:[
+   {id:'northwind',name:'Northwind Freight',type:'customer',industry:'Logistics',owner:'A. Morgan',stage:3,tracker:'jira',
+    contacts:['Dana Ruiz, VP Operations','Kai Patel, Platform Lead','Rosa Ng, Finance Partner'],
+    themes:['Reporting','Integrations','Workflow automation'],
+    calls:[
+     {id:'nw1',date:'2026-09-08',title:'Kickoff and goals',duration:41,summary:'Ops leaders rebuild SLA reports by hand every Friday. Goal: one source of truth for carrier performance.',transcript:'Dana Ruiz (Northwind, VP Operations): Every Friday two analysts rebuild our SLA report by hand. It takes most of the day.\nKai Patel (Northwind, Platform Lead): Our carrier data lives in four tools and none of them talk to each other.\nDana Ruiz (Northwind, VP Operations): I want one place where I can see on-time rate by lane.'},
+     {id:'nw2',date:'2026-09-29',title:'Workflow deep dive',duration:55,summary:'Mapped exception handling. Escalations live in email threads and get lost.',transcript:'Kai Patel (Northwind, Platform Lead): Exceptions get escalated over email and we lose track of who owns them.\nDana Ruiz (Northwind, VP Operations): We need alerts when a lane drops below 92 percent on time.\nRosa Ng (Northwind, Finance Partner): If we could tie late deliveries to penalty credits, finance would save a week every quarter.'},
+     {id:'nw3',date:'2026-10-21',title:'Requirements review',duration:38,summary:'Prioritized lane dashboard and alerts. Agreed to pilot with two regions.',transcript:'Dana Ruiz (Northwind, VP Operations): The lane dashboard is the must have for the pilot.\nKai Patel (Northwind, Platform Lead): API access to export the data into our warehouse would be great.'}
+    ],
+    pains:[{text:'SLA reports rebuilt by hand every Friday, most of a day for two analysts',src:'Sep 8'},{text:'Carrier data split across four tools with no integration',src:'Sep 8'},{text:'Escalations live in email threads and ownership gets lost',src:'Sep 29'},{text:'Penalty credits reconciled manually each quarter',src:'Sep 29'}],
+    quotes:[{text:'Every Friday two analysts rebuild our SLA report by hand. It takes most of the day.',who:'Dana Ruiz, Sep 8'},{text:'If we could tie late deliveries to penalty credits, finance would save a week every quarter.',who:'Rosa Ng, Sep 29'}],
+    requests:[R('nw-r1','On-time rate by lane dashboard','High','In progress','DISC-104','Sep 8','2026-10-24'),R('nw-r2','Alert when a lane drops below 92% on time','High','Planned','DISC-108','Sep 29','2026-10-24'),R('nw-r3','Link late deliveries to penalty credits','Medium','Planned','DISC-109','Sep 29','2026-10-25'),R('nw-r4','Assign an owner to every exception','Medium','Captured',null,'Sep 29','2026-09-29'),R('nw-r5','Warehouse export API','Low','Captured',null,'Oct 21','2026-10-21')],
+    snapshots:[{id:'nws1',date:'2026-09-08',stage:0,label:'Kickoff complete',note:'Goals and success metrics agreed with Dana.',m:{pains:2,requests:1,shipped:0}},{id:'nws2',date:'2026-09-29',stage:1,label:'Deep dive done',note:'Exception workflow mapped across three teams.',m:{pains:4,requests:4,shipped:0}},{id:'nws3',date:'2026-10-21',stage:3,label:'Requirements signed off',note:'Pilot scope: lane dashboard and alerts in two regions.',m:{pains:4,requests:5,shipped:0}}],
+    csat:[],docs:[]},
+   {id:'helio',name:'Helio Health Network',type:'customer',industry:'Healthcare',owner:'S. Rivera',stage:1,tracker:'servicenow',
+    contacts:['Maya Chen, Director of Clinical Ops','Jordan Lee, IT Manager'],
+    themes:['Workflow automation','Compliance and security'],
+    calls:[{id:'he1',date:'2026-10-30',title:'Intro and pain mapping',duration:33,summary:'Referral intake is manual and spread across three systems.',transcript:'Maya Chen (Helio, Director of Clinical Ops): Referral intake is our biggest headache. It is all manual.\nJordan Lee (Helio, IT Manager): Anything we buy has to pass a HIPAA review.'}],
+    pains:[{text:'Referral intake is manual across three systems',src:'Oct 30'}],
+    quotes:[{text:'Referral intake is our biggest headache. It is all manual.',who:'Maya Chen, Oct 30'}],
+    requests:[R('he-r1','Pass HIPAA security review','High','Captured',null,'Oct 30','2026-10-30')],
+    snapshots:[{id:'hes1',date:'2026-10-30',stage:1,label:'First call',note:'Intake identified as the top pain.',m:{pains:1,requests:1,shipped:0}}],
+    csat:[],docs:[]},
+   {id:'brightmark',name:'Brightmark Retail',type:'customer',industry:'Retail',owner:'A. Morgan',stage:6,tracker:'jira',
+    contacts:['Lena Ortiz, Head of Store Ops','Theo Brandt, BI Lead'],
+    themes:['Reporting','Communication'],
+    calls:[{id:'bm1',date:'2026-06-12',title:'Kickoff',duration:40,summary:'Store managers cannot see stockouts until the weekly report.',transcript:'Lena Ortiz (Brightmark, Head of Store Ops): Our managers find out about stockouts a week late.'},{id:'bm2',date:'2026-07-02',title:'Prioritization',duration:45,summary:'Ranked daily stockout digest first.',transcript:'Theo Brandt (Brightmark, BI Lead): A daily digest by store would fix most of it.'},{id:'bm3',date:'2026-09-15',title:'Validation',duration:30,summary:'Pilot stores cut stockout response from 6 days to 1.',transcript:'Lena Ortiz (Brightmark, Head of Store Ops): This is exactly what we needed. Response time went from six days to one.'}],
+    pains:[{text:'Stockouts discovered a week late',src:'Jun 12'},{text:'BI team flooded with ad hoc report requests',src:'Jul 2'}],
+    quotes:[{text:'This is exactly what we needed. Response time went from six days to one.',who:'Lena Ortiz, Sep 15'}],
+    requests:[R('bm-r1','Daily stockout digest by store','High','Shipped','DISC-071','Jun 12','2026-08-20'),R('bm-r2','Self-serve store scorecards','Medium','Shipped','DISC-074','Jul 2','2026-09-02'),R('bm-r3','Mobile view for district managers','Medium','Shipped','DISC-079','Jul 2','2026-09-10'),R('bm-r4','Forecast-based reorder hints','Low','In progress','DISC-091','Sep 15','2026-10-30')],
+    snapshots:[{id:'bms1',date:'2026-06-12',stage:0,label:'Kickoff',note:'Stockout visibility named as the goal.',m:{pains:1,requests:1,shipped:0}},{id:'bms2',date:'2026-07-02',stage:3,label:'Requirements',note:'Three requests ranked and linked to Jira.',m:{pains:2,requests:3,shipped:0}},{id:'bms3',date:'2026-08-20',stage:4,label:'First release',note:'Daily digest live in 12 pilot stores.',m:{pains:2,requests:3,shipped:1}},{id:'bms4',date:'2026-09-15',stage:5,label:'Validated',note:'Pilot cut stockout response from 6 days to 1.',m:{pains:2,requests:4,shipped:3}},{id:'bms5',date:'2026-10-02',stage:6,label:'Loop closed',note:'Customer confirmed outcomes and scored the engagement.',m:{pains:2,requests:4,shipped:3}}],
+    csat:[{date:'2026-09-16',score:4,comment:'Fast turnaround on the digest.',by:'Theo Brandt'},{date:'2026-10-02',score:5,comment:'We always knew where our requests stood.',by:'Lena Ortiz'}],docs:[]},
+   {id:'platform',name:'Platform Engineering',type:'internal',industry:'Internal team',owner:'R. Okafor',stage:4,tracker:'github',
+    contacts:['Ravi Okafor, Eng Manager','Ines Duarte, SRE Lead'],
+    themes:['Integrations','Performance'],
+    calls:[{id:'pe1',date:'2026-08-19',title:'Internal discovery: deploy pain',duration:30,summary:'Release notes are assembled by hand from four repos.',transcript:'Ravi Okafor (Platform, Eng Manager): Release notes take half a day because we copy and paste from four repos.\nInes Duarte (Platform, SRE Lead): We want incident follow-ups linked to the original request.'}],
+    pains:[{text:'Release notes copied by hand from four repos',src:'Aug 19'},{text:'Incident follow-ups lose their link to the original request',src:'Aug 19'}],
+    quotes:[{text:'Release notes take half a day because we copy and paste from four repos.',who:'Ravi Okafor, Aug 19'}],
+    requests:[R('pe-r1','Auto-generate release notes from merged PRs','High','Shipped','#88','Aug 19','2026-10-10','github'),R('pe-r2','Link incidents to originating requests','Medium','In progress','#93','Aug 19','2026-10-28','github'),R('pe-r3','Weekly reliability digest in Slack','Low','Planned','#97','Sep 9','2026-10-29','github')],
+    snapshots:[{id:'pes1',date:'2026-08-19',stage:1,label:'Internal discovery',note:'Two pains confirmed with the platform team.',m:{pains:2,requests:2,shipped:0}},{id:'pes2',date:'2026-09-09',stage:3,label:'Scoped',note:'Three requests linked to GitHub Issues.',m:{pains:2,requests:3,shipped:0}},{id:'pes3',date:'2026-10-10',stage:4,label:'Release notes shipped',note:'First request delivered to the team.',m:{pains:2,requests:3,shipped:1}}],
+    csat:[{date:'2026-10-12',score:4,comment:'Saved us half a day per release.',by:'Ravi Okafor'}],docs:[]}
+  ],
+  activity:[
+   {ts:'2026-11-06',acc:'northwind',text:'Synced 3 requests with Jira project DISC'},
+   {ts:'2026-11-06',acc:null,text:'Posted weekly digest to #customer-discovery in Slack'},
+   {ts:'2026-10-30',acc:'helio',text:'Logged call: Intro and pain mapping'},
+   {ts:'2026-10-28',acc:'platform',text:'Link incidents to originating requests moved to In progress (GitHub #93)'},
+   {ts:'2026-11-05',acc:'helio',text:'Requests for Helio route to ServiceNow, Product Feedback group'},
+   {ts:'2026-10-21',acc:'northwind',text:'Snapshot: Requirements signed off'},
+   {ts:'2026-10-02',acc:'brightmark',text:'CSAT 5 of 5 from Lena Ortiz'}
+  ],
+  syncLog:[]
+ };
+}
+
+let S=load();
+if(!S||S.v!==2)S=seed();
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fmt=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch(e){return d}};
+const short=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch(e){return d}};
+const acc=id=>S.accounts.find(a=>a.id===id);
+const uid=p=>p+Math.random().toString(36).slice(2,8);
+const stKey=s=>'st-'+s.replace(/\s+/g,'-');
+const shippedCount=a=>a.requests.filter(r=>r.status==='Shipped').length;
+const avg=arr=>arr.length?arr.reduce((x,y)=>x+y,0)/arr.length:null;
+function log(accId,text){S.activity.unshift({ts:today(),acc:accId,text});S.activity=S.activity.slice(0,60)}
+function toast(msg){const o=document.createElement('div');o.className='toast';o.textContent=msg;document.body.appendChild(o);$('#live').textContent=msg;setTimeout(()=>o.remove(),3200)}
+function visibleAccounts(){return S.accounts.filter(a=>S.mode==='all'||a.type===S.mode)}
+const isOn=id=>!!(S.connectors[id]&&S.connectors[id].on);
+function destsOn(){return DEST.filter(isOn)}
+function trackerOn(){return destsOn()[0]||null}
+function routeFor(a){return a.tracker&&isOn(a.tracker)?a.tracker:trackerOn()}
+function tick(r){return r.link?`<span class="chip" title="${esc(CONN[r.tool]?CONN[r.tool].name:'')}"><b style="font-weight:500;color:var(--muted)">${esc(CONN[r.tool]?CONN[r.tool].mono:'')}</b> ${esc(r.link)}</span>`:'<span class="muted" style="font-size:.8rem">Not linked</span>'}
+function stageIcon(){return ''}
+
+/* ---------- Claude capabilities (optional) ---------- */
+let SAMPLE=null,DOWNLOADS=null,DICT=null,HOSTED=false;
+if(window.claude&&typeof window.claude.use==='function'){
+ HOSTED=true;
+ window.claude.use('sample').then(s=>{SAMPLE=s;paintEngine()}).catch(()=>{});
+ window.claude.use('downloads').then(d=>{DOWNLOADS=d}).catch(()=>{});
+ window.claude.use('dictation').then(d=>{DICT=d;if(currentRoute().name==='ingest')render()}).catch(()=>{});
+}
+function paintEngine(){const e=$('#engine');if(!e)return;e.classList.toggle('ai',!!SAMPLE);e.querySelector('span').textContent=SAMPLE?'Claude + templates':'Templates'}
+function canDictate(){return !!DICT||(!HOSTED&&('webkitSpeechRecognition' in window||'SpeechRecognition' in window))}
+
+/* ---------- insight extraction (deterministic) ---------- */
+const RX={
+ internal:/\((?:[^)]*\bus\b[^)]*)\)|\binterviewer\b|\bhost\b/i,
+ pain:/(struggl|painful|\bpain\b|frustrat|manual|by hand|slow|takes (?:us )?(?:about |most of )?(?:\w+ )?(?:hours|days|weeks|the day)|can't|cannot|no way to|hard to|difficult|broken|waste|spreadsheet|copy and paste|pastes? it|error-prone|lose track|nobody knows|never hear back|disappears|headache|gets lost|a week late)/i,
+ request:/(\bi wish\b|would love|\bwe need\b|\bneed (?:a|an|to)\b|\bwe want\b|\bi want\b|could you|would be great|\bif we could\b|we'd like|should be able|ability to|looking for|single sign-on|\bsso\b|support for|integration with|must have)/i,
+ high:/(must|critical|blocker|urgent|renewal|every day|asap|compliance|hipaa|audit)/i,
+ low:/(nice to have|someday|eventually|minor)/i,
+ pos:/(love|great|helpful|happy|excited|exactly what|works well|valuable|thank)/gi,
+ neg:/(frustrat|painful|headache|error|broken|slow|lose|never|disappears|manual|waste|late)/gi
+};
+const THEMES={
+ 'Reporting':/(report|dashboard|metric|visibility|scorecard|volume)/i,
+ 'Integrations':/(jira|servicenow|slack|teams|integrat|api|sync|okta|export)/i,
+ 'Workflow automation':/(manual|automat|workflow|copy|spreadsheet|pastes|by hand)/i,
+ 'Compliance and security':/(audit|complian|hipaa|soc ?2|security|sign-on|sso|okta|access)/i,
+ 'Alerts and notifications':/(alert|notify|notification|digest)/i,
+ 'Communication':/(status|hear back|chasing|follow progress|update)/i,
+ 'Performance':/(latency|timeout|speed|performance)/i
+};
+function cleanTranscript(t){
+ return t.replace(/^WEBVTT.*$/gm,'').split(/\r?\n/).filter(l=>!/^\d+$/.test(l.trim())&&!/-->/.test(l)).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+function titleFrom(s){
+ const wasIf=/would be great if|if only/i.test(s);
+ let t=s.replace(/^(also|and|so|honestly|well),?\s*/i,'')
+  .replace(/^(i wish we could|i wish|we would love to|we'd love to|we would love|it would be great if|it would be great to|if we could|we need to|we need|we want to|we want|i want to|i want|we'd like to|we'd like|could you|we should be able to|we are looking for|we're looking for)\s+/i,'')
+  .replace(/[.!?]+$/,'').trim();
+ if(wasIf)t=t.replace(/\b(went|were sent|were|was|got sent) to\b/i,'to').replace(/\b(could|would) (\w+)/i,'$2');
+ t=t.charAt(0).toUpperCase()+t.slice(1);
+ if(t.length>72){t=t.slice(0,72);t=t.slice(0,t.lastIndexOf(' '))+'...'}
+ return t;
+}
+function analyzeRules(text){
+ const lines=cleanTranscript(text).split('\n').map(l=>l.trim()).filter(Boolean);
+ const pains=[],requests=[],quoteCands=[];let custText='';const people=new Set();
+ lines.forEach(line=>{
+  const m=line.match(/^([^:]{2,60}):\s*(.+)$/);
+  const who=m?m[1].trim():'';const body=m?m[2]:line;
+  if(who&&RX.internal.test(who))return;
+  if(who)people.add(who.replace(/\s*\(.*\)/,''));
+  custText+=' '+body;
+  const sents=body.split(/(?<=[.!?])\s+/);
+  sents.forEach((s,i)=>{
+   const ctx=s+' '+(sents[i+1]||'');
+   const isReq=RX.request.test(s), isPain=RX.pain.test(s);
+   const name=who.replace(/\s*\(.*\)/,'')||'Customer';
+   if(isReq){const pr=RX.high.test(ctx)?'High':RX.low.test(ctx)?'Low':'Medium';requests.push({title:titleFrom(s),priority:pr,evidence:s})}
+   else if(isPain){let p=s.replace(/[.]+$/,'').replace(/^(from (the|our) [\w ]{1,20} side|honestly|so|also|and),?\s*/i,'');pains.push(p.charAt(0).toUpperCase()+p.slice(1))}
+   if((isReq||isPain)&&s.length>=40&&s.length<=170){let sc=1+(/\d/.test(s)?1:0)+(RX.high.test(ctx)?1:0)+(/(frustrat|headache|painful|lose track)/i.test(s)?1:0);quoteCands.push({text:s,who:name,sc})}
+  });
+ });
+ const dedupe=(arr,key)=>{const seen=new Set();return arr.filter(x=>{const k=key(x).toLowerCase().slice(0,28);if(seen.has(k))return false;seen.add(k);return true})};
+ const pos=(custText.match(RX.pos)||[]).length, neg=(custText.match(RX.neg)||[]).length;
+ const themes=Object.keys(THEMES).filter(k=>THEMES[k].test(custText));
+ const quotes=quoteCands.sort((a,b)=>b.sc-a.sc).slice(0,3);
+ const P=dedupe(pains,x=>x), Q=dedupe(requests,x=>x.title);
+ return {engine:'Rules',people:[...people],pains:P.slice(0,8),requests:Q.slice(0,8),quotes,themes:themes.slice(0,4),
+  sentiment:Math.round(((pos-neg)/(pos+neg+1))*100)/100,
+  summary:(P.length?P.length+' pains and ':'')+Q.length+' requests from '+(people.size||'the')+' customer speaker'+(people.size===1?'':'s')+'. Top theme: '+(themes[0]||'General')+'.'};
+}
+async function analyzeAI(text,accountName){
+ const prompt=`You are Loopline, a customer discovery analyst. Read this customer call transcript with ${accountName}. Lines from our own team are marked "(..., us)"; ignore them as evidence.
+Return JSON only with this shape:
+{"summary": string (one sentence), "pains": string[] (max 6, customer problems in plain words), "requests": [{"title": string (short imperative feature request, max 70 chars), "priority": "High"|"Medium"|"Low", "evidence": string (the customer sentence)}] (max 6), "quotes": [{"text": string (verbatim customer sentence), "who": string (speaker first and last name)}] (max 3), "themes": string[] (max 4, from: Reporting, Integrations, Workflow automation, Compliance and security, Alerts and notifications, Communication, Performance), "sentiment": number between -1 and 1}
+Do not use em dashes. Do not invent facts not in the transcript.
+
+TRANSCRIPT:
+${text.slice(0,12000)}`;
+ const out=await SAMPLE.json(prompt,{modelTier:'default'});
+ if(!out||!Array.isArray(out.requests))throw new Error('bad shape');
+ return {engine:'Claude',people:[],pains:(out.pains||[]).slice(0,8),requests:out.requests.slice(0,8).map(r=>({title:String(r.title||'').slice(0,90),priority:['High','Medium','Low'].includes(r.priority)?r.priority:'Medium',evidence:r.evidence||''})),quotes:(out.quotes||[]).slice(0,3).map(q=>({text:q.text||'',who:q.who||'Customer'})),themes:(out.themes||[]).slice(0,4),sentiment:Number(out.sentiment)||0,summary:out.summary||''};
+}
+
+/* ---------- documents ---------- */
+function topTheme(a){return (a.themes&&a.themes[0])||'Customer workflow'}
+function prdTemplate(a){
+ const n=a.docs.filter(d=>d.type==='PRD').length+1;
+ const reqs=[...a.requests].sort((x,y)=>['High','Medium','Low'].indexOf(x.priority)-['High','Medium','Low'].indexOf(y.priority));
+ const must=reqs.filter(r=>r.priority==='High');
+ const moscow={High:'Must',Medium:'Should',Low:'Could'};
+ let m=`# PRD: ${topTheme(a)} for ${a.name}\n\n**Status:** Draft v${n} · **Owner:** ${a.owner} · **Stage:** ${STAGES[a.stage]} · **Generated:** ${fmt(today())}\n\nBuilt from ${a.calls.length} discovery call${a.calls.length===1?'':'s'}, ${a.pains.length} pains and ${a.requests.length} requests captured in Loopline.\n\n`;
+ m+=`## 1. Problem\n\n${a.name} (${a.industry}) described these problems in discovery:\n\n${a.pains.map(p=>`- ${p.text} _(call, ${p.src})_`).join('\n')||'- No pains captured yet.'}\n\n`;
+ m+=`## 2. Goals\n\n${must.map(r=>`- ${r.title}`).join('\n')||'- Confirm the top request with the customer.'}\n- Give ${a.name} live visibility into how each request is progressing.\n\n`;
+ m+=`## 3. Non-goals\n\n- Replacing the customer's system of record.\n- Requests captured below Medium priority unless they unblock a Must.\n\n`;
+ m+=`## 4. Users\n\n${a.contacts.map(c=>`- ${c}`).join('\n')}\n\n`;
+ m+=`## 5. Requirements\n\n| ID | Requirement | Priority | Status | Ticket |\n|---|---|---|---|---|\n${reqs.map((r,i)=>`| R${i+1} | ${r.title} | ${moscow[r.priority]} | ${r.status} | ${r.link?(CONN[r.tool]?CONN[r.tool].name+' ':'')+r.link:'Not linked'} |`).join('\n')}\n\n`;
+ const numQ=a.quotes.find(q=>/\d|day|week|hour/i.test(q.text));
+ m+=`## 6. Success metrics\n\n- Time spent on the top pain cut by at least 50% within two quarters${numQ?` (baseline from call: "${numQ.text}")`:''}.\n- ${Math.max(1,must.length)} Must requirement${must.length===1?'':'s'} shipped and confirmed by the customer.\n- Portal CSAT of 4.5 or higher at loop close.\n\n`;
+ m+=`## 7. Evidence\n\n${a.quotes.map(q=>`> "${q.text}" ${q.who}`).join('\n\n')||'No quotes yet.'}\n\n`;
+ m+=`## 8. Open questions\n\n- Which team owns rollout on the ${a.name} side?\n- What data access and security review is required?\n- Which requests can ship as a pilot first?\n\n`;
+ m+=`## 9. Rollout\n\n- Pilot with ${a.contacts[0]?a.contacts[0].split(',')[0]:'the champion'}'s team.\n- Track each requirement in ${routeFor(a)?CONN[routeFor(a)].name:'the team tracker'}; status flows back to the customer portal.\n- Close the loop with a CSAT survey after validation.\n`;
+ return m;
+}
+function brdTemplate(a){
+ const n=a.docs.filter(d=>d.type==='BRD').length+1;
+ const sh=shippedCount(a);
+ let m=`# BRD: ${a.name} discovery outcomes\n\n**Version:** ${n} · **Sponsor:** ${a.contacts[0]||'TBD'} · **Prepared by:** ${a.owner} · **Date:** ${fmt(today())}\n\n`;
+ m+=`## Executive summary\n\n${a.name} is at the **${STAGES[a.stage]}** stage. Discovery surfaced ${a.pains.length} business problems and ${a.requests.length} requests; ${sh} ${sh===1?'has':'have'} shipped. The leading theme is ${topTheme(a).toLowerCase()}.\n\n`;
+ m+=`## Business objectives\n\n- Remove the manual effort behind: ${a.pains[0]?a.pains[0].text.toLowerCase():'the top pain'}.\n- Improve decision speed for ${a.contacts.map(c=>c.split(',')[1]?c.split(',')[1].trim():c).join(', ')}.\n- Keep the customer informed on every request without status meetings.\n\n`;
+ m+=`## Current state\n\n${a.pains.map(p=>`- ${p.text}`).join('\n')}\n\n`;
+ m+=`## Stakeholders\n\n| Name | Role | Interest |\n|---|---|---|\n${a.contacts.map((c,i)=>{const [nm,rl]=c.split(',');return `| ${nm.trim()} | ${(rl||'').trim()} | ${i===0?'Sponsor and decision maker':'Key user'} |`}).join('\n')}\n\n`;
+ m+=`## Scope\n\n**In scope:** ${a.requests.filter(r=>r.priority!=='Low').map(r=>r.title).join('; ')||'TBD'}.\n\n**Out of scope:** ${a.requests.filter(r=>r.priority==='Low').map(r=>r.title).join('; ')||'Items not raised in discovery'}.\n\n`;
+ m+=`## Business requirements\n\n${a.requests.map((r,i)=>`- **BR-${i+1}** ${r.title} (${r.priority} priority, ${r.status.toLowerCase()})`).join('\n')}\n\n`;
+ m+=`## KPIs and value hypothesis\n\n| KPI | Target |\n|---|---|\n| Hours of manual work per week | Down 50% |\n| Requests shipped from discovery | ${a.requests.length} of ${a.requests.length} |\n| Customer CSAT at loop close | 4.5 or higher |\n\n`;
+ m+=`## Assumptions, risks and dependencies\n\n- Assumes access to the source systems named in discovery.\n- Risk: security review timeline. Dependency: requests route to ${routeFor(a)?CONN[routeFor(a)].name:'a tracker not yet connected'}.\n\n`;
+ m+=`## Sign-off\n\n| Role | Name | Decision |\n|---|---|---|\n| Business sponsor | ${(a.contacts[0]||'TBD').split(',')[0]} | Pending |\n| Product | ${a.owner} | Pending |\n`;
+ return m;
+}
+function docPrompt(a,type){
+ const data={account:a.name,industry:a.industry,type:a.type,stage:STAGES[a.stage],owner:a.owner,contacts:a.contacts,themes:a.themes,pains:a.pains,requests:a.requests.map(r=>({title:r.title,priority:r.priority,status:r.status,ticket:r.link?(CONN[r.tool]?CONN[r.tool].name+' ':'')+r.link:null})),quotes:a.quotes,calls:a.calls.map(c=>({date:c.date,title:c.title,summary:c.summary}))};
+ const shape=type==='PRD'?'Sections: Problem, Goals, Non-goals, Users, Requirements (markdown table with ID, Requirement, Priority as Must/Should/Could, Status, Ticket), Success metrics, Evidence (quotes as blockquotes), Open questions, Rollout.':'Sections: Executive summary, Business objectives, Current state, Stakeholders (table), Scope (in and out), Business requirements (BR-1...), KPIs and value hypothesis (table), Assumptions risks and dependencies, Sign-off (table).';
+ return `Write a concise ${type==='PRD'?'product requirements document':'business requirements document'} in GitHub markdown for this customer discovery. Start with "# ${type}: " and a title. Use only the facts in the data. ${shape} Keep it under 700 words. Do not use em dashes.\n\nDATA:\n${JSON.stringify(data)}`;
+}
+
+/* ---------- markdown renderer ---------- */
+function md(src){
+ const inl=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/(^|[\s(])_([^_]+)_(?=[\s).,]|$)/g,'$1<em>$2</em>');
+ const L=src.replace(/\r/g,'').split('\n');let out='',i=0,list=null;
+ const close=()=>{if(list){out+=`</${list}>`;list=null}};
+ while(i<L.length){const l=L[i];
+  if(/^\s*\|/.test(l)){close();const rows=[];while(i<L.length&&/^\s*\|/.test(L[i])){rows.push(L[i].trim());i++}
+   const cells=r=>r.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+   const head=cells(rows[0]);const body=rows.slice(1).filter(r=>!/^\|?\s*:?-{2,}/.test(r)).map(cells);
+   out+=`<div class="tablewrap"><table><thead><tr>${head.map(h=>`<th>${inl(h)}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr>${r.map(c=>`<td>${inl(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;continue}
+  let m;
+  if((m=l.match(/^(#{1,3})\s+(.*)/))){close();out+=`<h${m[1].length}>${inl(m[2])}</h${m[1].length}>`}
+  else if((m=l.match(/^\s*[-*]\s+(.*)/))){if(list!=='ul'){close();out+='<ul>';list='ul'}out+=`<li>${inl(m[1])}</li>`}
+  else if((m=l.match(/^\s*\d+[.)]\s+(.*)/))){if(list!=='ol'){close();out+='<ol>';list='ol'}out+=`<li>${inl(m[1])}</li>`}
+  else if((m=l.match(/^>\s?(.*)/))){close();out+=`<blockquote>${inl(m[1])}</blockquote>`}
+  else if(l.trim()===''){close()}
+  else{close();out+=`<p>${inl(l)}</p>`}
+  i++}
+ close();return out;
+}
+
+/* ---------- components ---------- */
+const ICON={
+ overview:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
+ ingest:'<path d="M12 3v12M7 10l5 5 5-5M4 19h16"/>',
+ docs:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6"/>',
+ connectors:'<path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0zM12 16v5"/>',
+ csat:'<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+ how:'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/>'
+};
+const ico=k=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+function mini(stage){return `<span class="mini" aria-label="Stage ${stage+1} of 7: ${STAGES[stage]}">${STAGES.map((s,i)=>`<i class="${i<stage?'on':i===stage?'cur':''}"></i>`).join('')}</span>`}
+function loopLine(a){
+ const pins={};a.snapshots.forEach(s=>{pins[s.stage]=(pins[s.stage]||0)+1});
+ const p=a.stage/(STAGES.length-1);
+ return `<div class="loopwrap"><ol class="loop" style="--p:${p}" aria-label="Discovery stages">${STAGES.map((s,i)=>`<li class="${i<a.stage?'done':i===a.stage?'current':'todo'}" ${i===a.stage?'aria-current="step"':''}>${pins[i]?`<span class="pin" title="${pins[i]} snapshot${pins[i]>1?'s':''}">${pins[i]}</span>`:''}<span class="dot"></span><span class="lbl">${s}</span></li>`).join('')}</ol></div>`;
+}
+function statusPill(s){return `<span class="pill ${stKey(s)}">${esc(s)}</span>`}
+function typeChip(a){return `<span class="chip type-${a.type}">${a.type==='internal'?'Internal team':'Customer'}</span>`}
+function csatAvg(a){const v=avg(a.csat.map(c=>c.score));return v==null?'No score':v.toFixed(1)+' / 5'}
+
+/* ---------- views ---------- */
+function vOverview(){
+ const A=visibleAccounts();
+ const open=A.reduce((n,a)=>n+a.requests.filter(r=>r.status!=='Shipped').length,0);
+ const shipped=A.reduce((n,a)=>n+shippedCount(a),0);
+ const scores=A.flatMap(a=>a.csat.map(c=>c.score));const cs=avg(scores);
+ const active=A.filter(a=>a.stage<6).length;
+ const label=S.mode==='internal'?'internal teams':S.mode==='customer'?'customers':'accounts';
+ return `<div class="wrap fade">
+ <div class="row" style="justify-content:space-between;align-items:flex-end">
+  <div><p class="eyebrow">Workspace</p><h1 tabindex="-1">Discovery, end to end</h1><p class="muted" style="margin-top:6px;max-width:62ch">Every call becomes evidence, every request becomes a ticket, and every ${S.mode==='internal'?'team':'customer'} can see their feedback move.</p></div>
+  <div class="row"><a class="btn" href="#ingest">${ico('ingest')} Log a call</a><a class="btn primary" href="#docs">${ico('docs')} Draft a PRD</a></div>
+ </div>
+ <div class="kpis">
+  <div class="kpi"><span class="eyebrow">Active discoveries</span><b>${active}</b><small>of ${A.length} ${label}</small></div>
+  <div class="kpi"><span class="eyebrow">Open requests</span><b>${open}</b><small>captured, planned or in progress</small></div>
+  <div class="kpi"><span class="eyebrow">Shipped from feedback</span><b>${shipped}</b><small>visible in customer portals</small></div>
+  <div class="kpi"><span class="eyebrow">Avg CSAT</span><b>${cs==null?'n/a':cs.toFixed(1)}</b><small>${scores.length} response${scores.length===1?'':'s'}, 5 point scale</small></div>
+ </div>
+ <div class="grid2">
+  <section class="card" aria-labelledby="acc-h"><div class="card-h"><h2 id="acc-h">Accounts</h2><span class="muted" style="font-size:.85rem">${A.length} shown</span></div>
+   <div class="tablewrap"><table><thead><tr><th>Account</th><th>Stage</th><th class="num">Requests</th><th>CSAT</th><th></th></tr></thead><tbody>
+   ${A.map(a=>`<tr><td><a class="rowlink" href="#customer-${a.id}">${esc(a.name)}</a><div class="row" style="gap:6px;margin-top:3px">${typeChip(a)}<span class="muted" style="font-size:.8rem">${esc(a.industry)}</span></div></td>
+   <td>${mini(a.stage)}<div class="muted" style="font-size:.78rem;margin-top:4px">${STAGES[a.stage]}</div></td>
+   <td class="num">${shippedCount(a)} / ${a.requests.length} <span class="muted" style="font-size:.78rem">shipped</span></td>
+   <td class="num">${csatAvg(a)}</td>
+   <td><a class="btn sm ghost" href="#portal-${a.id}">Portal</a></td></tr>`).join('')}
+   </tbody></table></div>
+  </section>
+  <div style="display:flex;flex-direction:column;gap:22px">
+   <section class="card"><div class="card-h"><h2>Try the loop</h2></div>
+    <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px">
+     <li><a href="#ingest">Load the sample Helio Health call</a> and extract pains and requests.</li>
+     <li><a href="#connectors">Sync</a> to push requests to each account's tool: Jira, ServiceNow or GitHub here, or any of 16 connectors.</li>
+     <li><a href="#docs">Generate a PRD or BRD</a> from the evidence.</li>
+     <li><a href="#portal-helio">Open Helio's portal</a> and leave a CSAT score.</li>
+    </ol></section>
+   <section class="card"><div class="card-h"><h2>Activity</h2></div>
+    <ul class="feed">${S.activity.filter(e=>!e.acc||visibleAccounts().some(a=>a.id===e.acc)).slice(0,8).map(e=>`<li><span class="k">${short(e.ts)}</span><span>${e.acc&&acc(e.acc)?`<a class="rowlink" href="#customer-${e.acc}">${esc(acc(e.acc).name)}</a>: `:''}${esc(e.text)}</span></li>`).join('')}</ul>
+   </section>
+  </div>
+ </div></div>`;
+}
+
+function vCustomer(a){
+ if(!a)return vMissing();
+ const last=a.snapshots[a.snapshots.length-1];
+ const tr=routeFor(a);
+ return `<div class="wrap fade">
+ <div class="row" style="justify-content:space-between;align-items:flex-end">
+  <div><p class="eyebrow"><a href="#overview" style="color:inherit">Accounts</a> / ${esc(a.industry)}</p><h1 tabindex="-1">${esc(a.name)}</h1>
+   <div class="row" style="gap:8px;margin-top:8px">${typeChip(a)}<span class="muted" style="font-size:.86rem">Owner ${esc(a.owner)} · ${a.calls.length} calls · CSAT ${csatAvg(a)}</span></div></div>
+  <div class="row"><button class="btn" data-act="addcall" data-id="${a.id}">${ico('ingest')} Log call</button><button class="btn" data-act="gendoc" data-id="${a.id}">${ico('docs')} PRD / BRD</button><a class="btn primary" href="#portal-${a.id}">Open portal</a></div>
+ </div>
+ <section class="card" aria-labelledby="loop-h">
+  <div class="card-h"><div><h2 id="loop-h">Loop line</h2><p class="muted" style="font-size:.85rem">Stage ${a.stage+1} of 7: ${STAGES[a.stage]}. Marigold pins are snapshots.</p></div>
+   <div class="row"><button class="btn sm" data-act="stage" data-id="${a.id}" data-d="-1" ${a.stage===0?'disabled':''} aria-label="Move back one stage">Back</button><button class="btn sm" data-act="stage" data-id="${a.id}" data-d="1" ${a.stage===6?'disabled':''} aria-label="Advance one stage">Advance</button><button class="btn sm primary" data-act="snap" data-id="${a.id}">Take snapshot</button></div></div>
+  ${loopLine(a)}
+ </section>
+ <div class="grid2">
+  <div style="display:flex;flex-direction:column;gap:22px;min-width:0">
+   <section class="card" aria-labelledby="req-h"><div class="card-h"><h2 id="req-h">Requests</h2><div class="row"><label class="muted" style="font-size:.82rem;display:flex;align-items:center;gap:6px" for="route-${a.id}">Route to<select id="route-${a.id}" data-change="route" data-acc="${a.id}" style="width:auto;padding:4px 8px;font-size:.82rem">${destsOn().map(id=>`<option value="${id}" ${id===tr?'selected':''}>${CONN[id].name}</option>`).join('')||'<option>No tool connected</option>'}</select></label><button class="btn sm" data-act="sync">Sync now</button></div></div>
+    ${a.requests.length?`<div class="tablewrap"><table><thead><tr><th>Request</th><th>Priority</th><th>Status</th><th>Ticket</th></tr></thead><tbody>
+    ${a.requests.map(r=>`<tr><td>${esc(r.title)}<div class="muted" style="font-size:.75rem">From call, ${esc(r.source)}</div></td><td><span class="pr pr-${r.priority}">${r.priority}</span></td>
+     <td><label class="sr" for="st-${r.id}">Status for ${esc(r.title)}</label><select id="st-${r.id}" data-change="status" data-acc="${a.id}" data-id="${r.id}">${STATUSES.map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></td>
+     <td>${tick(r)}</td></tr>`).join('')}
+    </tbody></table></div>`:`<div class="empty">No requests yet.<button class="btn sm" data-act="addcall" data-id="${a.id}">Log a call</button></div>`}
+   </section>
+   <section class="card"><div class="card-h"><h2>Pains</h2><span class="muted" style="font-size:.82rem">${a.themes.map(t=>`<span class="chip" style="margin-left:4px">${esc(t)}</span>`).join('')}</span></div>
+    <ul class="ul">${a.pains.map(p=>`<li><span style="color:var(--bad)">●</span><span>${esc(p.text)}</span><span class="src">${esc(p.src)}</span></li>`).join('')||'<li class="muted">None captured.</li>'}</ul></section>
+   <section class="card"><div class="card-h"><h2>Voice of the customer</h2></div>
+    <div style="display:flex;flex-direction:column;gap:12px">${a.quotes.map(q=>`<blockquote class="quote" style="margin:0">"${esc(q.text)}"<cite>${esc(q.who)}</cite></blockquote>`).join('')||'<p class="muted">No quotes yet.</p>'}</div></section>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:22px;min-width:0">
+   <section class="card" aria-labelledby="snap-h"><div class="card-h"><h2 id="snap-h">Snapshots</h2><span class="muted" style="font-size:.82rem">${a.snapshots.length} total</span></div>
+    <ol class="snaps">${[...a.snapshots].reverse().map((s,i,arr)=>{const prev=arr[i+1];const d=k=>prev?s.m[k]-prev.m[k]:s.m[k];const dl=(k,lbl)=>{const v=d(k);return `<span class="${v>0?'up':''}">${lbl} ${s.m[k]}${prev&&v?` (${v>0?'+':''}${v})`:''}</span>`};
+     return `<li><span class="d" aria-hidden="true"></span><div><div class="meta">${fmt(s.date)} · ${STAGES[s.stage]}</div><h3>${esc(s.label)}</h3><p class="muted" style="font-size:.88rem">${esc(s.note)}</p><div class="delta">${dl('pains','Pains')}${dl('requests','Requests')}${dl('shipped','Shipped')}</div></div></li>`}).join('')}</ol>
+   </section>
+   <section class="card"><div class="card-h"><h2>Calls</h2></div>
+    ${[...a.calls].reverse().map(c=>`<details class="call"><summary><b style="font-weight:600">${esc(c.title)}</b><span class="muted mono">${fmt(c.date)} · ${c.duration} min</span></summary><p style="margin-top:8px;font-size:.9rem">${esc(c.summary)}</p><pre>${esc(c.transcript)}</pre></details>`).join('')}
+   </section>
+   <section class="card"><div class="card-h"><h2>Contacts</h2></div><ul class="ul">${a.contacts.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></section>
+  </div>
+ </div></div>`;
+}
+
+let PENDING=null; // analysis result waiting to be saved
+function vIngest(){
+ const sel=S.ui.ingestAccount||'helio';
+ const draft=window.__draft||{title:'',date:today(),text:''};
+ return `<div class="wrap fade">
+ <div><p class="eyebrow">Capture</p><h1 tabindex="-1">Log a discovery call</h1><p class="muted" style="margin-top:6px;max-width:66ch">Paste a transcript, upload a .txt, .vtt or .srt file, or load the sample call. Loopline pulls out pains, requests, quotes and themes, then files them on the account's loop line.</p></div>
+ <div class="steps">
+  <section class="card form" aria-labelledby="in-h">
+   <p class="stepno">STEP 1 · SOURCE</p><h2 id="in-h">Transcript</h2>
+   <div class="two">
+    <label class="f" for="in-acc">Account<select id="in-acc" data-change="inacc">${S.accounts.map(a=>`<option value="${a.id}" ${a.id===sel?'selected':''}>${esc(a.name)}${a.type==='internal'?' (internal)':''}</option>`).join('')}<option value="__new">+ New account</option></select></label>
+    <label class="f" for="in-date">Call date<input type="date" id="in-date" value="${esc(draft.date)}"></label>
+   </div>
+   <div id="newacc" ${sel==='__new'?'':'hidden'} class="two">
+    <label class="f" for="na-name">Account name<input type="text" id="na-name" placeholder="Acme Robotics"></label>
+    <label class="f" for="na-type">Type<select id="na-type"><option value="customer">Customer</option><option value="internal">Internal team</option></select></label>
+   </div>
+   <label class="f" for="in-title">Call title<input type="text" id="in-title" value="${esc(draft.title)}" placeholder="Workflow deep dive"></label>
+   <label class="f drop" for="in-text" id="dropzone">Transcript text<textarea id="in-text" placeholder="Speaker Name (Company, Role): what they said&#10;Your Name (PM, us): your question">${esc(draft.text)}</textarea></label>
+   <div class="row">
+    <button class="btn" data-act="sample">Load sample call</button>
+    <label class="btn" for="in-file" style="cursor:pointer">Upload file</label><input type="file" id="in-file" accept=".txt,.vtt,.srt,.md,text/plain" class="sr" data-change="file">
+    ${canDictate()?`<button class="btn" data-act="dictate" id="dictBtn" aria-pressed="false">Live capture</button>`:''}
+   </div>
+   <p class="muted" style="font-size:.8rem">Tip: mark your own team with "us" in the speaker label, like "Sam (PM, us)". Those lines are ignored as evidence.${canDictate()?' Live capture types what your microphone hears into the transcript.':''}</p>
+   <button class="btn primary" data-act="analyze" id="anaBtn" style="align-self:flex-start">Extract insights</button>
+  </section>
+  <section class="card" aria-labelledby="out-h" id="results">
+   <p class="stepno">STEP 2 · REVIEW</p><h2 id="out-h">Insights</h2>
+   ${PENDING?resultsHTML(PENDING):`<div class="empty" style="margin-top:14px">Insights appear here after extraction.<span style="font-size:.85rem">Pick what to keep, then save to the account.</span></div>`}
+  </section>
+ </div></div>`;
+}
+function resultsHTML(r){
+ return `<div class="form" style="margin-top:10px">
+  <p class="muted" style="font-size:.88rem">${esc(r.summary)} <span class="chip">${r.engine==='Claude'?'Extracted by Claude':'Rules engine'}</span> <span class="chip">Sentiment ${r.sentiment>0?'+':''}${r.sentiment}</span></p>
+  ${r.themes.length?`<div class="row" style="gap:6px">${r.themes.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}
+  <h3>Requests (${r.requests.length})</h3>
+  <div>${r.requests.map((q,i)=>`<label class="check" for="rq${i}"><input type="checkbox" id="rq${i}" checked data-kind="req" data-i="${i}"><span style="flex:1"><b style="font-weight:600">${esc(q.title)}</b><br><span class="muted" style="font-size:.8rem">${esc(q.evidence)}</span></span><span class="pr pr-${q.priority}">${q.priority}</span></label>`).join('')||'<p class="muted">None found.</p>'}</div>
+  <h3>Pains (${r.pains.length})</h3>
+  <div>${r.pains.map((p,i)=>`<label class="check" for="pn${i}"><input type="checkbox" id="pn${i}" checked data-kind="pain" data-i="${i}"><span>${esc(p)}</span></label>`).join('')||'<p class="muted">None found.</p>'}</div>
+  <h3>Quotes</h3>
+  <div style="display:flex;flex-direction:column;gap:10px">${r.quotes.map(q=>`<blockquote class="quote" style="margin:0">"${esc(q.text)}"<cite>${esc(q.who)}</cite></blockquote>`).join('')||'<p class="muted">None found.</p>'}</div>
+  <div class="row"><button class="btn primary" data-act="savecall">Save to account</button><button class="btn ghost" data-act="discard">Discard</button></div>
+ </div>`;
+}
+
+function vDocs(){
+ const a=acc(S.ui.docAccount)||S.accounts[0];const type=S.ui.docType||'PRD';
+ const docs=a.docs.slice().reverse();const cur=window.__curDoc&&window.__curDoc.acc===a.id?window.__curDoc:(docs[0]?{acc:a.id,...docs[0]}:null);
+ return `<div class="wrap fade">
+ <div><p class="eyebrow">Requirements</p><h1 tabindex="-1">PRD and BRD studio</h1><p class="muted" style="margin-top:6px;max-width:66ch">Drafts are built from the account's calls, pains, requests, quotes and ticket status. ${SAMPLE?'Claude writes the draft; templates take over if it is unavailable.':'Templates write the draft here. When opened in Claude, Claude can write it instead.'}</p></div>
+ <div class="grid2" style="grid-template-columns:minmax(0,280px) minmax(0,1fr)">
+  <section class="card form" style="align-self:start">
+   <label class="f" for="d-acc">Account<select id="d-acc" data-change="docacc">${S.accounts.map(x=>`<option value="${x.id}" ${x.id===a.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+   <fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:6px"><legend class="f" style="font-size:.84rem;font-weight:600;color:var(--muted);margin-bottom:6px">Document</legend>
+    <div class="seg" role="group" aria-label="Document type"><button type="button" data-act="doctype" data-v="PRD" aria-pressed="${type==='PRD'}">PRD</button><button type="button" data-act="doctype" data-v="BRD" aria-pressed="${type==='BRD'}">BRD</button></div></fieldset>
+   <p class="muted" style="font-size:.82rem">Uses ${a.calls.length} calls, ${a.pains.length} pains, ${a.requests.length} requests and ${a.quotes.length} quotes.</p>
+   <button class="btn primary" data-act="generate" id="genBtn">Generate ${type}</button>
+   ${docs.length?`<div><p class="eyebrow" style="margin:6px 0">Saved drafts</p><ul class="ul">${docs.map(d=>`<li><button class="btn sm ghost" data-act="opendoc" data-id="${d.id}" style="text-align:left">${d.type} v${d.ver} · ${short(d.date)}</button><span class="src">${d.engine}</span></li>`).join('')}</ul></div>`:''}
+  </section>
+  <section class="card" aria-live="polite" style="min-width:0">
+   ${cur?`<div class="card-h"><div class="row" style="gap:8px"><span class="chip">${cur.type} v${cur.ver||''}</span><span class="muted" style="font-size:.82rem">${cur.engine==='Claude'?'Written by Claude':'Template'}</span></div><div class="row"><button class="btn sm" data-act="copydoc">Copy markdown</button><button class="btn sm" data-act="dldoc">Download .md</button></div></div><article class="doc" id="docView">${md(cur.md)}</article>`:`<div class="empty">No draft for ${esc(a.name)} yet.<span style="font-size:.85rem">Pick PRD or BRD and generate.</span></div>`}
+  </section>
+ </div></div>`;
+}
+
+function vConnectors(){
+ const cats=[...new Set(CONNECTORS.map(c=>c.cat))];
+ const n=Object.values(S.connectors).filter(c=>c.on).length;
+ return `<div class="wrap fade">
+ <div class="row" style="justify-content:space-between;align-items:flex-end">
+  <div><p class="eyebrow">Integrations</p><h1 tabindex="-1">Connectors</h1><p class="muted" style="margin-top:6px;max-width:66ch">Loopline is tool agnostic. Work trackers, source control, ITSM desks, chat and call tools all plug into one adapter model. Each account routes its requests to whichever tool its team uses, and customers see the same four statuses either way.</p></div>
+  <div class="row"><span class="muted" style="font-size:.86rem">${n} connected</span><button class="btn primary" data-act="sync">Sync now</button></div>
+ </div>
+ <p class="card muted" style="font-size:.86rem;padding:12px 16px;background:var(--signal-soft);border-color:transparent;color:var(--ink)">Demo mode: connecting is simulated and no credentials are collected. In production each button opens the tool's own OAuth consent screen.</p>
+ <section class="card" aria-labelledby="ad-h"><div class="card-h"><div><h2 id="ad-h">One adapter, any tool</h2><p class="muted" style="font-size:.85rem">Native statuses from every connected destination, mapped to the four statuses customers see.</p></div></div>
+  <div class="tablewrap"><table><thead><tr><th>Tool</th>${STATUSES.map(st=>`<th>${statusPill(st)}</th>`).join('')}<th>Accounts routed</th></tr></thead><tbody>
+  ${destsOn().map(id=>{const c=CONN[id];const routed=S.accounts.filter(a=>routeFor(a)===id).map(a=>a.name);return `<tr><td><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="mono-ico" style="background:${c.hue};width:26px;height:26px;font-size:.7rem;border-radius:2px" aria-hidden="true">${c.mono}</span><b style="font-weight:600;white-space:nowrap">${c.name}</b></span></td>${STATUSES.map(st=>`<td class="mono" style="font-size:.78rem">${esc((c.map.filter(m=>m[1]===st).map(m=>m[0])).join(', ')||(st==='Captured'?'Inbox':'Not used'))}</td>`).join('')}<td style="font-size:.85rem">${esc(routed.join(', ')||'None')}</td></tr>`}).join('')||`<tr><td colspan="6" class="muted">Connect a work tracker, source control or ITSM tool to route requests.</td></tr>`}
+  </tbody></table></div></section>
+ ${cats.map(cat=>`<h2 class="cat-h">${cat}</h2><div class="conns">${CONNECTORS.filter(c=>c.cat===cat).map(c=>{const st=S.connectors[c.id];return `<div class="card conn"><div class="head"><span class="mono-ico" style="background:${c.hue}" aria-hidden="true">${c.mono}</span><div><h3>${c.name}</h3>${st&&st.on?`<span class="on-dot">Connected</span>`:`<span class="muted" style="font-size:.8rem">Not connected</span>`}</div></div><p class="muted" style="font-size:.86rem">${c.desc}</p>${c.map?`<p style="font-size:.76rem" class="muted">Can receive requests</p>`:''}${st&&st.on?`<p class="mono muted">${esc(c.target)}: ${esc(st.target)}${st.lastSync?' · synced '+short(st.lastSync):''}</p>`:''}<div class="foot">${st&&st.on?`<button class="btn sm" data-act="conn" data-id="${c.id}">Settings</button><button class="btn sm ghost" data-act="disconnect" data-id="${c.id}">Disconnect</button>`:`<button class="btn sm primary" data-act="conn" data-id="${c.id}">Connect</button>`}</div></div>`}).join('')}</div>`).join('')}
+ <section class="card"><div class="card-h"><h2>Sync log</h2></div>${S.syncLog.length?`<ul class="feed">${S.syncLog.slice(0,14).map(e=>`<li><span class="k">${esc(e.t)}</span><span>${esc(e.text)}</span></li>`).join('')}</ul>`:'<p class="muted">Run a sync to see pushes and status updates here.</p>'}</section>
+ </div>`;
+}
+
+function vCsat(){
+ const A=visibleAccounts();const all=A.flatMap(a=>a.csat.map(c=>({...c,acc:a})));
+ const v=avg(all.map(c=>c.score));const dist=[5,4,3,2,1].map(s=>({s,n:all.filter(c=>c.score===s).length}));const max=Math.max(1,...dist.map(d=>d.n));
+ const sat=all.length?Math.round(all.filter(c=>c.score>=4).length/all.length*100):null;
+ const reqs=A.flatMap(a=>a.requests);const closure=reqs.length?Math.round(reqs.filter(r=>r.status==='Shipped').length/reqs.length*100):0;
+ return `<div class="wrap fade">
+ <div><p class="eyebrow">Outcomes</p><h1 tabindex="-1">Customer satisfaction</h1><p class="muted" style="margin-top:6px;max-width:66ch">Scores come from the portal. Each one is tied to where that account stood on its loop line when it was given.</p></div>
+ <div class="kpis">
+  <div class="kpi"><span class="eyebrow">Average CSAT</span><b>${v==null?'n/a':v.toFixed(2)}</b><small>out of 5</small></div>
+  <div class="kpi"><span class="eyebrow">Responses</span><b>${all.length}</b><small>across ${A.filter(a=>a.csat.length).length} accounts</small></div>
+  <div class="kpi"><span class="eyebrow">Satisfied</span><b>${sat==null?'n/a':sat+'%'}</b><small>scored 4 or 5</small></div>
+  <div class="kpi"><span class="eyebrow">Loop closure</span><b>${closure}%</b><small>requests shipped</small></div>
+ </div>
+ <div class="grid2">
+  <section class="card"><div class="card-h"><h2>Distribution</h2></div><div class="bars">${dist.map(d=>`<div class="bar"><span class="mono">${d.s}</span><span class="t" role="img" aria-label="${d.n} responses scored ${d.s}"><i style="width:${d.n/max*100}%"></i></span><span class="mono muted">${d.n}</span></div>`).join('')}</div>
+   <h3 style="margin:22px 0 10px">By account</h3>
+   <div class="tablewrap"><table><thead><tr><th>Account</th><th>Stage</th><th class="num">CSAT</th><th class="num">Shipped</th></tr></thead><tbody>${A.map(a=>`<tr><td><a class="rowlink" href="#customer-${a.id}">${esc(a.name)}</a></td><td>${mini(a.stage)}</td><td class="num">${csatAvg(a)}</td><td class="num">${shippedCount(a)} / ${a.requests.length}</td></tr>`).join('')}</tbody></table></div></section>
+  <section class="card"><div class="card-h"><h2>Recent comments</h2></div><ul class="feed">${all.sort((x,y)=>y.date.localeCompare(x.date)).slice(0,10).map(c=>`<li><span class="k">${short(c.date)}</span><span><b>${c.score}/5</b> ${esc(c.comment||'No comment')}<br><span class="muted" style="font-size:.8rem">${esc(c.by)}, ${esc(c.acc.name)}</span></span></li>`).join('')||'<li class="muted">No scores yet. Open a portal to leave one.</li>'}</ul></section>
+ </div></div>`;
+}
+
+let CSAT_PICK=null;
+function vPortal(a){
+ if(!a)return vMissing();
+ const sh=shippedCount(a),tot=a.requests.length,pct=tot?Math.round(sh/tot*100):0;
+ const last=a.snapshots[a.snapshots.length-1];
+ return `<div class="wrap fade" style="max-width:1040px">
+ <div class="row" style="justify-content:space-between"><a class="btn sm ghost" href="#customer-${a.id}">Back to workspace</a><button class="btn sm" data-act="copylink">Copy portal link</button></div>
+ <section class="portal-hero">
+  <div><p class="eyebrow">${a.type==='internal'?'Internal team portal':'Customer portal'}</p><h1 tabindex="-1">${esc(a.name)}: your feedback, in motion</h1><p class="muted" style="margin-top:6px">Updated ${fmt(last?last.date:today())}. Everything you told us, where it stands, and what happens next.</p></div>
+  ${loopLine(a)}
+  <div><div class="row" style="justify-content:space-between;font-size:.88rem;margin-bottom:6px"><span><b>${sh} of ${tot}</b> requests shipped</span><span class="mono">${pct}%</span></div><div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Requests shipped"><i style="width:${pct}%"></i></div></div>
+ </section>
+ <section aria-labelledby="board-h"><h2 id="board-h" style="margin-bottom:12px">Your requests</h2>
+  <div class="board">${STATUSES.map(s=>{const it=a.requests.filter(r=>r.status===s);return `<div class="col"><h3><span>${s}</span><span class="mono">${it.length}</span></h3>${it.map(r=>`<div class="tile"><span>${esc(r.title)}</span><span class="row" style="gap:6px">${statusPill(r.status)}<span class="muted" style="font-size:.74rem">raised ${esc(r.source)}</span></span></div>`).join('')||'<p class="muted" style="font-size:.82rem;padding:4px">Nothing here yet.</p>'}</div>`}).join('')}</div>
+ </section>
+ <div class="grid2">
+  <section class="card"><div class="card-h"><h2>What we heard</h2></div><div style="display:flex;flex-direction:column;gap:12px">${a.quotes.map(q=>`<blockquote class="quote" style="margin:0">"${esc(q.text)}"<cite>${esc(q.who)}</cite></blockquote>`).join('')}</div>
+   <h3 style="margin:20px 0 10px">Milestones</h3><ol class="snaps">${[...a.snapshots].reverse().map(s=>`<li><span class="d" aria-hidden="true"></span><div><div class="meta">${fmt(s.date)}</div><h3>${esc(s.label)}</h3><p class="muted" style="font-size:.88rem">${esc(s.note)}</p></div></li>`).join('')}</ol></section>
+  <section class="card form" aria-labelledby="cs-h" style="align-self:start"><h2 id="cs-h">How are we doing?</h2><p class="muted" style="font-size:.9rem">How satisfied are you with how we are acting on your feedback?</p>
+   <div class="scores" role="group" aria-label="Score from 1 to 5">${[1,2,3,4,5].map(n=>`<button type="button" data-act="pick" data-v="${n}" aria-pressed="${CSAT_PICK===n}">${n}</button>`).join('')}</div>
+   <div class="score-lbls"><span>Not satisfied</span><span>Very satisfied</span></div>
+   <label class="f" for="cs-name">Your name<input type="text" id="cs-name" placeholder="${esc((a.contacts[0]||'').split(',')[0])}"></label>
+   <label class="f" for="cs-com">Comment (optional)<textarea id="cs-com" style="min-height:90px;font-family:var(--f-body)" placeholder="What should we do next?"></textarea></label>
+   <button class="btn primary" data-act="csat" data-id="${a.id}" style="align-self:flex-start">Submit score</button>
+   ${a.csat.length?`<p class="muted" style="font-size:.84rem">${a.csat.length} score${a.csat.length>1?'s':''} so far, average ${csatAvg(a)}.</p>`:''}
+  </section>
+ </div></div>`;
+}
+
+function vHow(){
+ return `<div class="wrap fade" style="max-width:980px">
+ <div><p class="eyebrow">Product brief</p><h1 tabindex="-1">Why Loopline exists</h1><p class="muted" style="margin-top:8px;max-width:68ch">Discovery evidence is scattered across call recordings, research notes, tickets and slide decks. Customers who gave the feedback rarely see what happened to it. Loopline keeps one living record per account, from first call to shipped requirement, and shares it with the customer.</p></div>
+ <section class="card"><div class="card-h"><h2>Who it is for</h2></div>
+  <div class="arch" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+   <div><b>Buyer</b>VP Product or Head of Customer Success who needs proof that discovery turns into roadmap and retention.</div>
+   <div><b>Daily users</b>PMs, solution engineers and CSMs running discovery across many accounts.</div>
+   <div><b>Customer stakeholders</b>Champions and sponsors who want to see their requests move without status meetings.</div>
+   <div><b>Internal teams</b>Platform and ops teams using the same loop for internal requests.</div>
+  </div></section>
+ <section class="card"><div class="card-h"><h2>The landscape</h2><span class="muted" style="font-size:.82rem">My read of public positioning, Nov 2026</span></div>
+  <div class="tablewrap"><table><thead><tr><th>Product</th><th>Strength</th><th>Where Loopline differs</th></tr></thead><tbody>
+   <tr><td><a href="https://www.gong.io/en/voice-of-customer-software" target="_blank" rel="noopener">Gong</a></td><td>Call recording and conversation intelligence for revenue teams</td><td>Turns calls into requirements and shows customers the outcome</td></tr>
+   <tr><td><a href="https://dovetail.com/dovetail-vs-enterpret/" target="_blank" rel="noopener">Dovetail</a></td><td>Research repository and synthesis</td><td>Per-account timeline that the customer can see</td></tr>
+   <tr><td><a href="https://www.enterpret.com/guides/the-7-best-customer-insights-platforms-in-2026" target="_blank" rel="noopener">Enterpret</a></td><td>AI feedback analytics across channels at scale</td><td>Built for the depth of a few enterprise accounts, not volume</td></tr>
+   <tr><td><a href="https://www.capterra.ie/compare/160651/174077/productboard/vs/dovetail" target="_blank" rel="noopener">Productboard</a></td><td>Feedback to roadmap prioritization</td><td>Discovery stages, snapshots and PRD/BRD drafts per account</td></tr>
+   <tr><td><a href="https://www.atlassian.com/software/jira/product-discovery/resources/handbook/feedback-and-insights" target="_blank" rel="noopener">Jira Product Discovery</a></td><td>Ideas and insights inside Atlassian</td><td>Tool agnostic: Jira, Linear, Azure DevOps, GitHub, GitLab, ServiceNow</td></tr>
+   <tr><td><a href="https://canny.io/blog/?p=1573" target="_blank" rel="noopener">Canny</a></td><td>Public boards and changelogs to close the loop</td><td>Private, account-level portal with call evidence and CSAT</td></tr>
+  </tbody></table></div></section>
+ <section class="card"><div class="card-h"><h2>Naming</h2></div>
+  <div class="names"><div class="pick"><b>Loopline</b> <span class="chip">Chosen</span><p class="muted" style="font-size:.86rem;margin-top:6px">Closing the feedback loop, drawn as a line the customer can follow. Short, says the job, works as a verb: "Loopline it."</p></div>
+  <div><b>Signalpath</b><p class="muted" style="font-size:.86rem;margin-top:6px">From signal to shipped. Clear, but sounds like analytics only.</p></div>
+  <div><b>Fieldline</b><p class="muted" style="font-size:.86rem;margin-top:6px">Field notes plus timeline. Warm, but less obvious about the customer loop.</p></div></div>
+  <p class="muted" style="font-size:.8rem;margin-top:10px">Trademark and domain checks are still needed before any real launch.</p></section>
+ <section class="card"><div class="card-h"><h2>Architecture</h2></div>
+  <div class="arch"><div><b>Capture</b>Zoom, Meet and Teams recordings, uploaded transcripts, live dictation.</div><div><b>Understand</b>LLM extraction of pains, requests, quotes and themes, with a rules fallback.</div><div><b>Track</b>Loop line stages, snapshots and request status per account.</div><div><b>Share</b>Connector adapters push tickets and pull status; the portal and CSAT close the loop.</div></div>
+  <h3 style="margin:18px 0 8px">Connector contract</h3>
+<pre class="code">interface Connector {
+  id: "jira" | "linear" | "ado" | "github" | "gitlab" | "servicenow" | "zendesk" | string
+  authorize(): Promise&lt;OAuthGrant&gt;            // tool's own OAuth screen
+  pushRequest(req: Request): Promise&lt;TicketRef&gt; // create issue with evidence
+  pullStatus(refs: TicketRef[]): Promise&lt;Status[]&gt;
+  statusMap: Record&lt;string, "Captured" | "Planned" | "In progress" | "Shipped"&gt;
+  onWebhook?(event: unknown): Status | null      // real-time updates
+}</pre></section>
+ <section class="card"><div class="card-h"><h2>What is real in this demo</h2></div>
+  <div class="tablewrap"><table><thead><tr><th>Feature</th><th>In this demo</th><th>In production</th></tr></thead><tbody>
+   <tr><td>Insight extraction</td><td>Works. Claude when opened in Claude, a rules engine everywhere else</td><td>Model pipeline with speaker diarization and evidence links</td></tr>
+   <tr><td>PRD and BRD drafts</td><td>Works. Claude or templates, copy and download</td><td>Versioned docs synced to Confluence, Notion or Google Docs</td></tr>
+   <tr><td>Timeline, snapshots, portal, CSAT</td><td>Works, stored in this browser only</td><td>Multi-tenant database with role-based sharing</td></tr>
+   <tr><td>Call recording</td><td>Transcript upload and live dictation where the browser allows</td><td>Meeting bot or native Zoom, Meet and Teams integrations</td></tr>
+   <tr><td>Jira and other connectors</td><td>Simulated push, status pull and digests. No credentials</td><td>OAuth apps calling each tool's REST API plus webhooks</td></tr>
+  </tbody></table></div></section>
+ </div>`;
+}
+function vMissing(){return `<div class="wrap"><div class="empty"><h1 tabindex="-1">Not found</h1><p>That account does not exist in this demo.</p><a class="btn" href="#overview">Back to workspace</a></div></div>`}
+
+/* ---------- router ---------- */
+function currentRoute(){
+ const h=(location.hash||'').slice(1)||'overview';
+ if(h.startsWith('customer-'))return {name:'customer',id:h.slice(9)};
+ if(h.startsWith('portal-'))return {name:'portal',id:h.slice(7)};
+ if(['overview','ingest','docs','connectors','csat','how'].includes(h))return {name:h};
+ return {name:'overview'};
+}
+function nav(r){
+ const items=[['overview','Overview'],['ingest','Log a call'],['docs','PRD and BRD'],['connectors','Connectors'],['csat','CSAT'],['how','How it works']];
+ const accs=visibleAccounts();
+ $('#nav').innerHTML=items.map(([k,l])=>`<a href="#${k}" ${r.name===k?'aria-current="page"':''}>${ico(k)}${l}</a>`).join('')+
+  `<div class="sep"></div><p class="eyebrow rail-label" style="padding:4px 10px">Accounts</p>`+
+  accs.map(a=>`<a class="acct" href="#customer-${a.id}" ${r.name==='customer'&&r.id===a.id?'aria-current="page"':''}>${esc(a.name)}${mini(a.stage)}</a>`).join('');
+ document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.mode)));
+}
+let lastRoute='';
+function render(){
+ const r=currentRoute();
+ $('#app').classList.toggle('portal-mode',r.name==='portal');
+ nav(r);
+ const V={overview:vOverview,ingest:vIngest,docs:vDocs,connectors:vConnectors,csat:vCsat,how:vHow};
+ $('#main').innerHTML=r.name==='customer'?vCustomer(acc(r.id)):r.name==='portal'?vPortal(acc(r.id)):V[r.name]();
+ const key=r.name+(r.id||'');
+ if(key!==lastRoute){lastRoute=key;window.scrollTo(0,0);const h=$('#main h1');if(h&&document.activeElement!==document.body)h.focus({preventScroll:true})}
+ if(r.name==='ingest')wireDrop();
+ paintEngine();
+}
+window.addEventListener('hashchange',()=>{CSAT_PICK=null;render()});
+
+/* ---------- actions ---------- */
+function stashDraft(){const t=$('#in-text');if(!t)return;window.__draft={title:$('#in-title').value,date:$('#in-date').value,text:t.value}}
+function snapshot(a,label,note){a.snapshots.push({id:uid('s'),date:today(),stage:a.stage,label,note,m:{pains:a.pains.length,requests:a.requests.length,shipped:shippedCount(a)}})}
+function wireDrop(){
+ const z=$('#dropzone');if(!z)return;
+ z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over')});
+ z.addEventListener('dragleave',()=>z.classList.remove('over'));
+ z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)readFile(f)});
+}
+function readFile(f){
+ if(f.size>2e6){toast('That file is over 2 MB. Try a plain text transcript.');return}
+ const fr=new FileReader();fr.onload=()=>{$('#in-text').value=cleanTranscript(String(fr.result));if(!$('#in-title').value)$('#in-title').value=f.name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ');toast('Loaded '+f.name)};fr.readAsText(f);
+}
+let rec=null;
+async function toggleDictation(btn){
+ const ta=$('#in-text');
+ if(rec){try{rec.stop()}catch(e){}rec=null;btn.setAttribute('aria-pressed','false');btn.textContent='Live capture';return}
+ if(DICT){
+  let base=ta.value;
+  DICT.onPartial(({text})=>{ta.value=base+(base?'\n':'')+'Customer: '+text});
+  DICT.onFinal(({text})=>{base=base+(base?'\n':'')+'Customer: '+text;ta.value=base});
+  DICT.onState(({state})=>{if(state==='idle'){rec=null;btn.setAttribute('aria-pressed','false');btn.textContent='Live capture'}});
+  try{DICT.start().catch(()=>{toast('Microphone access was not granted.');rec=null;btn.setAttribute('aria-pressed','false');btn.textContent='Live capture'});rec={stop:()=>DICT.stop()};btn.setAttribute('aria-pressed','true');btn.textContent='Stop capture'}catch(e){toast('Live capture is not available here.')}
+  return;
+ }
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('Live capture is not available in this browser.');return}
+ const r=new SR();r.continuous=true;r.interimResults=false;r.lang='en-US';
+ r.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)ta.value+=(ta.value?'\n':'')+'Customer: '+e.results[i][0].transcript.trim()}};
+ r.onerror=()=>toast('Microphone access was not granted.');
+ r.onend=()=>{rec=null;btn.setAttribute('aria-pressed','false');btn.textContent='Live capture'};
+ try{r.start();rec=r;btn.setAttribute('aria-pressed','true');btn.textContent='Stop capture'}catch(e){toast('Live capture could not start.')}
+}
+async function analyze(btn){
+ const text=$('#in-text').value.trim();
+ if(text.length<40){toast('Paste a transcript first, or load the sample call.');return}
+ stashDraft();
+ const sel=$('#in-acc').value;const name=sel==='__new'?($('#na-name').value||'the customer'):acc(sel).name;
+ btn.disabled=true;btn.innerHTML='<span class="spin" aria-hidden="true"></span> Extracting';
+ let res=null;
+ if(SAMPLE){try{res=await analyzeAI(text,name)}catch(e){toast('Claude was unavailable, so the rules engine was used.')}}
+ if(!res)res=analyzeRules(text);
+ PENDING=res;render();
+ const out=$('#results');if(out)out.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function saveCall(){
+ if(!PENDING)return;
+ let sel=$('#in-acc').value;let a;
+ if(sel==='__new'){const nm=$('#na-name').value.trim();if(!nm){toast('Name the new account first.');return}
+  const id=nm.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,24)||uid('acc');
+  a={id:acc(id)?id+'-'+uid(''):id,name:nm,type:$('#na-type').value,industry:$('#na-type').value==='internal'?'Internal team':'New account',owner:'You',stage:0,contacts:PENDING.people.length?PENDING.people.map(p=>p+', Stakeholder'):['Primary contact, Sponsor'],themes:[],calls:[],pains:[],quotes:[],requests:[],snapshots:[],csat:[],docs:[]};
+  S.accounts.push(a);
+ } else a=acc(sel);
+ const date=$('#in-date').value||today();const title=$('#in-title').value.trim()||'Discovery call';const src=short(date);
+ const keepR=[...document.querySelectorAll('input[data-kind=req]')].filter(x=>x.checked).map(x=>PENDING.requests[+x.dataset.i]);
+ const keepP=[...document.querySelectorAll('input[data-kind=pain]')].filter(x=>x.checked).map(x=>PENDING.pains[+x.dataset.i]);
+ const text=$('#in-text').value.trim();
+ a.calls.push({id:uid('c'),date,title,duration:Math.max(5,Math.round(text.split(/\s+/).length/140)),summary:PENDING.summary,transcript:text});
+ keepP.forEach(p=>a.pains.push({text:p,src}));
+ keepR.forEach(r=>a.requests.push({id:uid('r'),title:r.title,priority:r.priority,status:'Captured',link:null,source:src,updated:date}));
+ PENDING.quotes.forEach(q=>a.quotes.unshift({text:q.text,who:q.who+', '+src}));a.quotes=a.quotes.slice(0,6);
+ PENDING.themes.forEach(t=>{if(!a.themes.includes(t))a.themes.push(t)});a.themes=a.themes.slice(0,4);
+ if(a.stage<1)a.stage=1;
+ snapshot(a,'After call: '+title,`${keepR.length} requests and ${keepP.length} pains added from the call.`);
+ log(a.id,`Logged call: ${title} (${keepR.length} requests, ${keepP.length} pains)`);
+ if(S.connectors.slack&&S.connectors.slack.on)log(a.id,`Posted call summary to ${S.connectors.slack.target} in Slack`);
+ PENDING=null;window.__draft=null;save();toast('Saved to '+a.name);location.hash='customer-'+a.id;
+}
+async function generate(btn){
+ const a=acc(S.ui.docAccount)||S.accounts[0];const type=S.ui.docType||'PRD';
+ const ver=a.docs.filter(d=>d.type===type).length+1;
+ btn.disabled=true;btn.innerHTML='<span class="spin" aria-hidden="true"></span> Writing';
+ let text=null,engine='Template';
+ if(SAMPLE){
+  const view=$('#docView');
+  try{const r=await SAMPLE(docPrompt(a,type),{modelTier:'default',onText:({text:t})=>{const v=$('#docView');if(v)v.innerHTML=md(t)}});
+   if(r&&r.text&&r.text.length>200){text=r.text.replace(/\u2014/g,', ');engine='Claude'}}catch(e){toast('Claude was unavailable, so the template was used.')}
+ }
+ if(!text)text=type==='PRD'?prdTemplate(a):brdTemplate(a);
+ const d={id:uid('d'),type,ver,date:today(),engine,md:text};a.docs.push(d);
+ log(a.id,`Generated ${type} v${ver} (${engine==='Claude'?'Claude':'template'})`);
+ window.__curDoc={acc:a.id,...d};save();render();toast(type+' v'+ver+' ready');
+}
+async function copyText(t){try{await navigator.clipboard.writeText(t);toast('Copied')}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Copied')}catch(_){toast('Select the text and copy it manually.')}ta.remove()}}
+async function download(name,text){
+ if(DOWNLOADS){try{await DOWNLOADS.save({filename:name,data:text});return}catch(e){if(e&&e.code==='declined')return}}
+ try{const b=new Blob([text],{type:'text/markdown'});const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download=name;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(e){copyText(text)}
+}
+function openConn(id){
+ const c=CONN[id];const st=S.connectors[id]||{};
+ $('#overlay').innerHTML=`<div class="modal-bg" data-act="closemodal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-h" onclick="event.stopPropagation()">
+  <div class="row"><span class="mono-ico" style="background:${c.hue}" aria-hidden="true">${c.mono}</span><div><h2 id="m-h">${st.on?'':'Connect '}${c.name}</h2><p class="muted" style="font-size:.84rem">${c.desc}</p></div></div>
+  <p style="font-size:.86rem;background:var(--signal-soft);padding:10px 12px;border-radius:2px">Demo: no sign-in and no credentials. In production this step opens ${c.name}'s OAuth consent screen.</p>
+  <label class="f" for="m-target">${c.target}<input type="text" id="m-target" value="${esc(st.target||c.def)}"></label>
+  ${c.map?`<div><p class="eyebrow" style="margin-bottom:6px">Status mapping</p><div class="tablewrap"><table><thead><tr><th>${c.name} status</th><th>Loopline status</th></tr></thead><tbody>${c.map.map(([x,y])=>`<tr><td class="mono">${esc(x)}</td><td>${statusPill(y)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+  <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-act="closemodal">Cancel</button><button class="btn primary" data-act="saveconn" data-id="${id}">${st.on?'Save':'Connect'}</button></div>
+ </div></div>`;
+ setTimeout(()=>{const i=$('#m-target');if(i)i.focus()},20);
+}
+const ITSM_SIGNALS=[
+ {acc:'northwind',title:'Bulk re-route shipments from the lane view'},
+ {acc:'helio',title:'Export referral list to CSV for auditors'},
+ {acc:'platform',title:'Show deploy freeze windows in the release notes'},
+ {acc:'brightmark',title:'Store scorecards in Spanish'}
+];
+function sync(){
+ const now=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});const L=t=>S.syncLog.unshift({t:now,text:t});
+ if(!Object.values(S.connectors).some(c=>c.on)){toast('Connect a tool first.');location.hash='connectors';return}
+ let pushed=0,moved=0,imported=0;
+ const itsm=ITSM.filter(isOn);
+ if(itsm.length&&S.itsmQueue<ITSM_SIGNALS.length){
+  const sig=ITSM_SIGNALS[S.itsmQueue++];const a=acc(sig.acc);const via=CONN[itsm[S.itsmQueue%itsm.length]].name;
+  if(a){a.requests.push({id:uid('r'),title:sig.title,priority:'Medium',status:'Captured',link:null,tool:null,source:'Ticket',updated:today()});imported++;
+   L(`Imported "${sig.title}" from ${via} for ${a.name}`);log(a.id,`Imported request from ${via}: ${sig.title}`)}
+ }
+ S.accounts.forEach(a=>{
+  const tool=routeFor(a);if(!tool)return;
+  a.requests.forEach(r=>{if(!r.link&&r.status==='Captured'){S.seq++;r.link=keyFor(tool,S.seq);r.tool=tool;r.status='Planned';r.updated=today();pushed++;L(`Created ${r.link} in ${CONN[tool].name} for ${a.name}: ${r.title}`);log(a.id,`Pushed to ${CONN[tool].name} as ${r.link}: ${r.title}`)}});
+ });
+ const linked=S.accounts.flatMap(a=>a.requests.filter(r=>r.link&&isOn(r.tool)&&r.status!=='Shipped'&&r.updated!==today()).map(r=>({a,r}))).sort((x,y)=>x.r.updated.localeCompare(y.r.updated)).slice(0,3);
+ linked.forEach(({a,r})=>{const i=STATUSES.indexOf(r.status);r.status=STATUSES[Math.min(3,i+1)];r.updated=today();moved++;const c=CONN[r.tool];const ext=(c.map.find(m=>m[1]===r.status)||[r.status])[0];L(`${r.link} is "${ext}" in ${c.name}, shown to ${a.name} as ${r.status}`);log(a.id,`${r.title} moved to ${r.status} (${c.name} ${r.link})`)});
+ if(!destsOn().length)L('No destination tool connected, so no tickets were created.');
+ Object.keys(S.connectors).forEach(id=>{if(isOn(id))S.connectors[id].lastSync=today()});
+ ['slack','teams'].forEach(id=>{if(isOn(id))L(`Posted digest to ${S.connectors[id].target} in ${CONN[id].name}`)});
+ S.syncLog=S.syncLog.slice(0,40);save();render();
+ toast(`Sync done: ${pushed} created, ${moved} updated${imported?', '+imported+' imported':''}`);
+}
+function keyFor(tool,n){
+ if(['github','gitlab','bitbucket'].includes(tool))return '#'+n;
+ if(['servicenow'].includes(tool))return 'ENHC'+String(1000+n);
+ if(['zendesk','freshservice'].includes(tool))return '#'+(48000+n);
+ if(tool==='asana')return 'T-'+n;
+ const t=(S.connectors[tool]&&S.connectors[tool].target)||'DISC';return (t.replace(/[^A-Za-z]/g,'').toUpperCase().slice(0,5)||'REQ')+'-'+n;
+}
+
+const ACT={
+ mode:t=>{S.mode=t.dataset.v;save();render()},
+ reset:t=>{if(t.dataset.armed){S=seed();PENDING=null;window.__curDoc=null;window.__draft=null;save();t.dataset.armed='';t.textContent='Reset demo';location.hash='overview';render();toast('Demo data reset')}else{t.dataset.armed='1';t.textContent='Click again to reset';setTimeout(()=>{t.dataset.armed='';t.textContent='Reset demo'},3500)}},
+ stage:t=>{const a=acc(t.dataset.id);a.stage=Math.max(0,Math.min(6,a.stage+ +t.dataset.d));log(a.id,'Stage set to '+STAGES[a.stage]);save();render()},
+ snap:t=>{const a=acc(t.dataset.id);snapshot(a,STAGES[a.stage]+' check-in',`${shippedCount(a)} of ${a.requests.length} requests shipped.`);log(a.id,'Snapshot: '+STAGES[a.stage]+' check-in');save();render();toast('Snapshot saved')},
+ addcall:t=>{S.ui.ingestAccount=t.dataset.id;PENDING=null;window.__draft=null;save();location.hash='ingest'},
+ gendoc:t=>{S.ui.docAccount=t.dataset.id;window.__curDoc=null;save();location.hash='docs'},
+ sample:()=>{$('#in-text').value=SAMPLE_CALL;$('#in-title').value='Workflow deep dive';const s=$('#in-acc');if(s.value!=='helio'){s.value='helio';S.ui.ingestAccount='helio';$('#newacc').hidden=true}toast('Sample call loaded. It is fictional.')},
+ dictate:t=>toggleDictation(t),
+ analyze:t=>analyze(t),
+ savecall:()=>saveCall(),
+ discard:()=>{PENDING=null;stashDraft();render()},
+ doctype:t=>{S.ui.docType=t.dataset.v;save();render()},
+ generate:t=>generate(t),
+ opendoc:t=>{const a=acc(S.ui.docAccount);const d=a.docs.find(x=>x.id===t.dataset.id);window.__curDoc={acc:a.id,...d};render()},
+ copydoc:()=>{const c=window.__curDoc||currentDocFallback();if(c)copyText(c.md)},
+ dldoc:()=>{const c=window.__curDoc||currentDocFallback();if(c){const a=acc(c.acc);download(`${a.name.replace(/\W+/g,'_')}_${c.type}_v${c.ver}.md`,c.md)}},
+ conn:t=>openConn(t.dataset.id),
+ closemodal:(t,e)=>{if(e.target===t||t.tagName==='BUTTON')$('#overlay').innerHTML=''},
+ saveconn:t=>{const id=t.dataset.id;const was=S.connectors[id]&&S.connectors[id].on;S.connectors[id]={...(S.connectors[id]||{}),on:true,target:$('#m-target').value.trim()||CONN[id].def};$('#overlay').innerHTML='';if(!was)log(null,`Connected ${CONN[id].name} (${S.connectors[id].target})`);save();render();toast(was?'Saved':CONN[id].name+' connected')},
+ disconnect:t=>{const id=t.dataset.id;S.connectors[id].on=false;log(null,`Disconnected ${CONN[id].name}`);save();render();toast(CONN[id].name+' disconnected')},
+ sync:()=>sync(),
+ pick:t=>{CSAT_PICK=+t.dataset.v;document.querySelectorAll('[data-act=pick]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===CSAT_PICK)))},
+ csat:t=>{if(!CSAT_PICK){toast('Pick a score from 1 to 5 first.');return}const a=acc(t.dataset.id);const by=$('#cs-name').value.trim()||'Customer portal';a.csat.push({date:today(),score:CSAT_PICK,comment:$('#cs-com').value.trim(),by});log(a.id,`CSAT ${CSAT_PICK} of 5 from ${by}`);CSAT_PICK=null;save();render();toast('Thanks. Your score was recorded.')},
+ copylink:()=>copyText(location.href.split('#')[0]+location.hash)
+};
+function currentDocFallback(){const a=acc(S.ui.docAccount);const d=a&&a.docs[a.docs.length-1];return d?{acc:a.id,...d}:null}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const f=ACT[t.dataset.act];if(f){if(t.tagName==='A')e.preventDefault();f(t,e)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#overlay').innerHTML)$('#overlay').innerHTML=''});
+document.addEventListener('change',e=>{const t=e.target;const k=t.dataset&&t.dataset.change;if(!k)return;
+ if(k==='status'){const a=acc(t.dataset.acc);const r=a.requests.find(x=>x.id===t.dataset.id);r.status=t.value;r.updated=today();log(a.id,`${r.title} set to ${r.status}`);save();render()}
+ if(k==='route'){const a=acc(t.dataset.acc);if(isOn(t.value)){a.tracker=t.value;log(a.id,`Requests now route to ${CONN[t.value].name}`);save();render();toast(a.name+' routes to '+CONN[t.value].name)}}
+ if(k==='inacc'){S.ui.ingestAccount=t.value;$('#newacc').hidden=t.value!=='__new';save()}
+ if(k==='file'){const f=t.files&&t.files[0];if(f)readFile(f);t.value=''}
+ if(k==='docacc'){S.ui.docAccount=t.value;window.__curDoc=null;save();render()}
+});
+render();
+})();
+</script>
+
+</body>
+</html>
