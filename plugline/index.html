@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<a class="pf-back" href="../index.html#projects" onclick="if(document.referrer&&history.length>1){history.back();return false}">&larr; Portfolio</a>
+<title>Plugline Integrator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: search on top, then two panes: the vendor's endpoints on the left and a request tester on the right. One column on phones. */
+:root{
+  --bg:#F3F4F5; --surface:#FFFFFF; --surface-2:#EAEBEC; --line:#DADCDE; --line-strong:#9EA3A8; --fg:#101112; --muted:#474B50;
+  --accent:#4338CA; --accent-ink:#FFFFFF; --accent-soft:#E8E7FC;
+  --bad:#B42318; --bad-soft:#F6DFDB;
+  --code-bg:#101112; --code-fg:#ECEEEF; --code-dim:#8C9196; --code-key:#A5B4FC;
+  --font-sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius:2px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C0D0E; --surface:#141617; --surface-2:#1B1D1F; --line:#272A2D; --line-strong:#5A5F64; --fg:#ECEEEF; --muted:#A8ADB2;
+    --accent:#A5B4FC; --accent-ink:#0C0D0E; --accent-soft:#1C1D3D;
+    --bad:#FF7A6E; --bad-soft:#3A1915;
+    --code-bg:#08090A; --code-fg:#ECEEEF; --code-dim:#8C9196; --code-key:#A5B4FC; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C0D0E; --surface:#141617; --surface-2:#1B1D1F; --line:#272A2D; --line-strong:#5A5F64; --fg:#ECEEEF; --muted:#A8ADB2;
+  --accent:#A5B4FC; --accent-ink:#0C0D0E; --accent-soft:#1C1D3D;
+  --bad:#FF7A6E; --bad-soft:#3A1915;
+  --code-bg:#08090A; --code-fg:#ECEEEF; --code-dim:#8C9196; --code-key:#A5B4FC; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:15px;line-height:1.5}
+.app{max-width:1240px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mark{width:34px;height:34px;background:var(--accent);position:relative;flex:none}
+.mark::before,.mark::after{content:"";position:absolute;top:10px;width:9px;height:14px;border:2.5px solid var(--accent-ink)}
+.mark::before{left:7px;border-right:none}
+.mark::after{right:7px;border-left:none}
+.brand h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.badge{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line-strong);color:var(--muted);padding:2px 7px}
+.what{font-size:19px;line-height:1.45;max-width:66ch}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.search{display:flex;gap:8px;flex-wrap:wrap}
+.search input{flex:1 1 280px;min-width:0;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);padding:11px 13px;font-size:16px}
+.search input:focus{border-color:var(--accent)}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius);padding:9px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.small{padding:5px 10px;font-size:13px;font-weight:500}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.examples{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ex{border:1px solid var(--line);background:var(--surface-2);padding:4px 10px;font-size:13px;cursor:pointer;border-radius:var(--radius)}
+.ex:hover{border-color:var(--accent)}
+
+.groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:900px){.groups{grid-template-columns:minmax(0,1fr)}}
+.group{display:flex;flex-direction:column;gap:6px;min-width:0}
+.vlist{display:flex;flex-direction:column;border:1px solid var(--line)}
+.vbtn{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border:none;border-top:1px solid var(--line);cursor:pointer;text-align:left}
+.vbtn:first-child{border-top:none}
+.vbtn:hover{background:var(--surface-2)}
+.vbtn[aria-pressed="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.vname{font-weight:600;font-size:14px}
+.tag{font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap}
+.tag.live{border-color:var(--accent);color:var(--accent)}
+
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+@media (max-width:980px){.work{grid-template-columns:minmax(0,1fr)}}
+.vhead{display:flex;flex-direction:column;gap:6px}
+.vhead h2{font-size:20px}
+.links{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+.meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:13px}
+.meta dt{color:var(--muted)}
+.meta dd{margin:0;font-family:var(--font-mono);font-size:12.5px;overflow-wrap:anywhere}
+.found{list-style:none;margin:0;padding:10px 12px;background:var(--surface-2);font-size:13px;display:flex;flex-direction:column;gap:3px}
+.found li::before{content:"✓ ";color:var(--accent);font-weight:700}
+.eps{display:flex;flex-direction:column;border:1px solid var(--line)}
+.ep{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;border:none;border-top:1px solid var(--line);background:var(--surface);cursor:pointer;text-align:left}
+.ep:first-child{border-top:none}
+.ep:hover{background:var(--surface-2)}
+.ep[aria-pressed="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.m{font-family:var(--font-mono);font-size:11.5px;font-weight:600;padding:2px 0;text-align:center;border:1px solid var(--fg);color:var(--fg)}
+.m.POST,.m.PUT,.m.PATCH{background:var(--fg);color:var(--bg)}
+.ep .path{font-family:var(--font-mono);font-size:12.5px;overflow-wrap:anywhere}
+.ep .sum{font-size:13px;color:var(--muted)}
+.match{font-size:11px;font-weight:600;color:var(--accent);margin-left:6px}
+
+.tester{display:flex;flex-direction:column;gap:14px}
+.urlbar{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.urlbar .m{display:grid;place-items:center;padding:0 10px;min-width:62px}
+.url{flex:1 1 260px;min-width:0;font-family:var(--font-mono);font-size:12.5px;border:1px solid var(--line-strong);padding:8px 10px;overflow-wrap:anywhere;background:var(--surface-2)}
+.params{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.params label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+.params input{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:6px 8px;font-family:var(--font-mono);font-size:12.5px;color:var(--fg);min-width:0}
+.params input:focus{border-color:var(--accent)}
+.hdrs{font-family:var(--font-mono);font-size:12.5px;display:flex;flex-direction:column;gap:2px}
+.hdrs .k{color:var(--muted)}
+pre.code{background:var(--code-bg);color:var(--code-fg);font-family:var(--font-mono);font-size:12px;line-height:1.55;padding:12px 14px;margin:0;overflow:auto;max-height:420px;white-space:pre}
+.resp-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.status{font-family:var(--font-mono);font-weight:600;font-size:13px;padding:3px 8px;background:var(--fg);color:var(--bg)}
+.status.err{background:var(--bad);color:#fff}
+.status.none{background:var(--surface-2);color:var(--muted)}
+.rmeta{font-family:var(--font-mono);font-size:12.5px;color:var(--muted)}
+.src{font-size:13px;font-weight:600}
+.src.live{color:var(--accent)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line)}
+.tab{background:none;border:none;border-bottom:2px solid transparent;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.notice{border:1px solid var(--line-strong);border-left:3px solid var(--accent);padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:8px}
+.notice.bad{border-left-color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hint{font-size:12.5px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px}
+footer{color:var(--muted);font-size:13px;max-width:80ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <h1>Plugline</h1>
+      <span class="badge">Demo</span>
+    </div>
+    <p class="what">Tell Plugline what you want to integrate. It finds the vendor's official API docs, lists the endpoints you need, and lets you test each one right here, like a built-in Postman.</p>
+  </header>
+
+  <section class="card" aria-label="Find endpoints">
+    <form class="search" id="searchForm">
+      <label class="label" for="q" style="flex-basis:100%">What do you want to do?</label>
+      <input id="q" type="text" autocomplete="off" placeholder="For example: pull open issues from GitLab">
+      <button class="btn primary" type="submit">Find endpoints</button>
+    </form>
+    <div class="examples" id="examples"><span class="hint">Try:</span></div>
+    <div class="groups" id="groups"></div>
+  </section>
+
+  <div class="work">
+    <section class="card" id="vendorPane" aria-label="Vendor and endpoints"></section>
+    <section class="card tester" id="testerPane" aria-label="API tester"></section>
+  </div>
+
+  <footer>
+    <p>Live means the call goes straight from your browser to the vendor and you see the real response. GitHub, GitLab, Bitbucket and Azure DevOps allow this for public data with no key. The other vendors need your own credentials or a company instance, so the demo shows sample responses shaped like their official docs and labels them as samples.</p>
+    <p>Docs links and endpoints for these 15 tools are preloaded from each vendor's official API reference. Inside the Claude preview every outside call is blocked, so open the hosted copy to run live calls. Concept and product spec by Pranav Krishna Anand.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const SNAP = {"gl_project": {"id": 278964, "name": "GitLab", "path_with_namespace": "gitlab-org/gitlab", "default_branch": "master", "star_count": 6199, "forks_count": 12620, "last_activity_at": "2026-11-10T02:36:53.872Z", "web_url": "https://gitlab.com/gitlab-org/gitlab"}, "gl_issues": [{"iid": 639263, "title": "Follow-up from \"Rename Caproni OAuth job to cng-oauth\"", "state": "opened", "created_at": "2026-11-10T03:06:03.084Z", "labels": ["Category:Performance Tooling", "automation:ml", "backend", "devops::developer experience", "group::performance enablement", "section::developer experience", "type::maintenance", "workflow::ready for development"], "web_url": "https://gitlab.com/gitlab-org/gitlab/-/work_items/639263"}, {"iid": 639262, "title": "AI Catalog: Support transfer Group to an Organization - MCP servers may be dropped when running an agent from another organization", "state": "opened", "created_at": "2026-11-10T02:59:22.256Z", "labels": ["backend", "devops::agent foundations", "feature::addition", "group::ai catalog", "section::ai", "type::feature"], "web_url": "https://gitlab.com/gitlab-org/gitlab/-/work_items/639262"}], "gl_mrs": [{"iid": 269445, "title": "Draft: Allow tag pipeline trigger filter field [skip ci]", "state": "opened", "source_branch": "allow-tag-pipeline-trigger-filter-604490", "target_branch": "master", "created_at": "2026-11-10T03:29:59.293Z"}, {"iid": 269444, "title": "Draft: qa: Update AI development principles from SSOT (20261110)", "state": "opened", "source_branch": "docs-sync/principles-20261110-qa", "target_branch": "master", "created_at": "2026-11-10T03:26:58.630Z"}], "gl_commits": [{"short_id": "21ca151c", "title": "Merge branch '639255-ruby-class-design-guidance-docs' into 'master'", "author_name": "Thong Kuah", "created_at": "2026-11-10T16:08:51.000+13:00"}, {"short_id": "d42eeb37", "title": "Add instance variable and load-time state rules to Ruby style guide", "author_name": "Thong Kuah", "created_at": "2026-11-10T16:08:51.000+13:00"}], "bb_repo": {"full_name": "atlassian/atlassian-event", "is_private": false, "language": "", "mainbranch": {"name": "master"}, "updated_on": "2026-11-07T11:38:06.201590+00:00", "size": 2849158}, "bb_commits": {"values": [{"hash": "d39478cc0180", "date": "2026-05-13T13:43:05+00:00", "message": "feat: add healthTierFilter to store and MetricsGrid filtering", "author": {"raw": "Dhaval Moliya"}}, {"hash": "47836cf34e62", "date": "2026-05-13T13:42:28+00:00", "message": "feat: wire HealthScoreSummary into CommandBar, store and MetricsGrid", "author": {"raw": "Dhaval Moliya"}}]}, "bb_prs": {"values": [{"id": 20, "title": "Issue/vpp 243", "state": "MERGED", "created_on": "2016-04-29T04:56:27.780048+00:00"}, {"id": 236, "title": "DCPL-3069 Fix the link to the combined repository", "state": "MERGED", "created_on": "2025-10-14T11:13:16.075778+00:00"}]}, "bb_branches": {"values": [{"name": "3.1.x", "target": {"hash": "8a22ad22211b"}}, {"name": "4.0.x", "target": {"hash": "658564847e62"}}]}, "az_repos": {"count": 1, "value": [{"id": "2459d599-fdb2-4d28-9810-daeec061cf90", "name": "dotnet-public-wiki", "defaultBranch": "refs/heads/main", "size": 12337, "webUrl": "https://dev.azure.com/dnceng-public/public/_git/dotnet-public-wiki"}]}, "az_commits": {"count": 2, "value": [{"commitId": "af56d96fdbd7", "author": {"name": "MerlinBot", "date": "2026-02-18T04:35:04Z"}, "comment": "Merge pull request 5 from invBootstrap into main"}, {"commitId": "6573a31da896", "author": {"name": "MerlinBot", "date": "2026-02-18T04:35:02Z"}, "comment": "Merge pull request 5 from invBootstrap into main"}]}, "az_prs": {"count": 2, "value": [{"pullRequestId": 5, "title": "Inventory bootstrapping", "status": "completed", "creationDate": "2026-02-18T04:35:01.9643061Z", "sourceRefName": "refs/heads/invBootstrap", "targetRefName": "refs/heads/main"}, {"pullRequestId": 1, "title": "Landing Page for Customers", "status": "completed", "creationDate": "2023-05-09T21:37:43.9987594Z", "sourceRefName": "refs/heads/ilyas-docs", "targetRefName": "refs/heads/main"}]}, "az_refs": {"count": 1, "value": [{"name": "refs/heads/main", "objectId": "af56d96fdbd7"}]}};
+const CAPTURED = "Nov 10, 2026";
+
+/* ---------- Catalog ---------- */
+function E(m,p,s,tags,o){return Object.assign({m:m,p:p,s:s,tags:tags,q:{},mode:"key",body:null,sample:null,ss:200,src:"docs"},o||{});}
+const BEARER = {Authorization:"Bearer YOUR_TOKEN"};
+
+const VENDORS = [
+/* ITSM */
+{id:"servicenow",cat:"itsm",name:"ServiceNow",base:"https://{instance}.service-now.com/api/now",params:{instance:"your-instance"},
+ docs:"https://developer.servicenow.com/dev.do#!/reference/api/latest/rest/c_TableAPI",docsLabel:"Table API reference",spec:null,
+ auth:"Basic auth or OAuth 2.0 against your company instance",headers:{Authorization:"Basic BASE64(user:password)",Accept:"application/json"},
+ eps:[
+  E("GET","/table/incident","List active incidents",["incident","incidents","ticket","tickets","list","open","active","pull"],{q:{sysparm_query:"active=true",sysparm_limit:"5"},sample:{result:[{sys_id:"9d385017c611228701d22104cc95c371",number:"INC0010023",short_description:"Email server not responding",priority:"2",state:"2",opened_at:"2026-11-09 18:22:10"},{sys_id:"46b66a40a9fe198101f243dfbc79033d",number:"INC0010024",short_description:"VPN drops every 10 minutes",priority:"3",state:"1",opened_at:"2026-11-09 19:05:44"}]}}),
+  E("POST","/table/incident","Create an incident",["create","new","incident","ticket","raise","log","open"],{body:{short_description:"VPN drops every 10 minutes",urgency:"2",impact:"2",caller_id:"abel.tuter"},ss:201,sample:{result:{sys_id:"a83820b58f723300e7e16c7827bdeed2",number:"INC0010031",state:"1",short_description:"VPN drops every 10 minutes"}}}),
+  E("PATCH","/table/incident/{sys_id}","Update or resolve an incident",["update","resolve","close","incident","status"],{params:{sys_id:"9d385017c611228701d22104cc95c371"},body:{state:"6",close_code:"Solved (Permanently)",close_notes:"Restarted the mail relay"},sample:{result:{number:"INC0010023",state:"6",close_code:"Solved (Permanently)"}}}),
+  E("GET","/table/change_request","List change requests",["change","changes","change request","cab"],{q:{sysparm_limit:"5"},sample:{result:[{number:"CHG0030045",short_description:"Patch database cluster",type:"normal",state:"-1",start_date:"2026-11-12 02:00:00"}]}}),
+  E("GET","/table/sys_user","List users",["user","users","people","employees"],{q:{sysparm_limit:"5",sysparm_fields:"user_name,name,email"},sample:{result:[{user_name:"abel.tuter",name:"Abel Tuter",email:"abel.tuter@example.com"}]}})
+ ]},
+{id:"jsm",cat:"itsm",name:"Jira Service Management",base:"https://{site}.atlassian.net/rest/servicedeskapi",params:{site:"your-site"},
+ docs:"https://developer.atlassian.com/cloud/jira/service-desk/rest/intro/",docsLabel:"REST API reference",spec:"https://dac-static.atlassian.com/cloud/jira/service-desk/swagger.v3.json",
+ auth:"Email plus API token (Basic) or OAuth 2.0",headers:{Authorization:"Basic BASE64(email:api_token)",Accept:"application/json"},
+ eps:[
+  E("GET","/request","List open customer requests",["request","requests","ticket","tickets","open","list","pull","issue","issues"],{q:{requestStatus:"OPEN_REQUESTS",limit:"5"},sample:{size:2,values:[{issueKey:"ITHD-142",summary:"New laptop for onboarding",currentStatus:{status:"Waiting for support"}},{issueKey:"ITHD-145",summary:"Cannot access VPN",currentStatus:{status:"In progress"}}]}}),
+  E("POST","/request","Create a customer request",["create","new","request","ticket","raise","log","issue"],{body:{serviceDeskId:"1",requestTypeId:"10",requestFieldValues:{summary:"Cannot access VPN",description:"Error 809 since this morning"}},ss:201,sample:{issueKey:"ITHD-157",currentStatus:{status:"Waiting for support"},_links:{web:"https://your-site.atlassian.net/servicedesk/customer/portal/1/ITHD-157"}}}),
+  E("GET","/servicedesk","List service desks",["service desk","desks","projects","list"],{sample:{size:1,values:[{id:"1",projectId:"10001",projectName:"IT Help Desk",projectKey:"ITHD"}]}}),
+  E("GET","/servicedesk/{serviceDeskId}/queue","List queues with counts",["queue","queues","backlog","count"],{params:{serviceDeskId:"1"},q:{includeCount:"true"},sample:{size:2,values:[{id:"20",name:"All open",issueCount:34},{id:"21",name:"Breached SLA",issueCount:3}]}}),
+  E("GET","/request/{issueIdOrKey}/sla","Get SLA status for a request",["sla","breach","response time","deadline"],{params:{issueIdOrKey:"ITHD-142"},sample:{values:[{name:"Time to first response",ongoingCycle:{breached:false,remainingTime:{friendly:"2h 14m"}}}]}})
+ ]},
+{id:"zendesk",cat:"itsm",name:"Zendesk",base:"https://{subdomain}.zendesk.com/api/v2",params:{subdomain:"your-company"},
+ docs:"https://developer.zendesk.com/api-reference/ticketing/introduction/",docsLabel:"Ticketing API reference",spec:null,
+ auth:"Email plus API token (Basic) or OAuth 2.0",headers:{Authorization:"Basic BASE64(email/token:api_token)",Accept:"application/json"},
+ eps:[
+  E("GET","/tickets.json","List tickets",["ticket","tickets","list","pull","support"],{q:{per_page:"5",sort_order:"desc"},sample:{tickets:[{id:35436,subject:"Help, my printer is on fire!",status:"open",priority:"high",created_at:"2026-11-09T21:14:03Z"}],count:1}}),
+  E("GET","/search.json","Search open tickets",["search","open","find","ticket","tickets"],{q:{query:"type:ticket status:open"},sample:{results:[{id:35436,result_type:"ticket",subject:"Help, my printer is on fire!",status:"open"}],count:1}}),
+  E("POST","/tickets.json","Create a ticket",["create","new","ticket","raise","log"],{body:{ticket:{subject:"My printer is on fire!",comment:{body:"The smoke is very colorful."},priority:"urgent"}},ss:201,sample:{ticket:{id:35437,subject:"My printer is on fire!",status:"new",priority:"urgent"}}}),
+  E("PUT","/tickets/{ticket_id}.json","Update or solve a ticket",["update","solve","close","resolve","status"],{params:{ticket_id:"35436"},body:{ticket:{status:"solved",comment:{body:"Replaced the fuser. Closing.",public:true}}},sample:{ticket:{id:35436,status:"solved"}}}),
+  E("GET","/users.json","List users",["user","users","customers","agents"],{q:{per_page:"5"},sample:{users:[{id:20978392,name:"Ana Lopez",email:"ana@example.com",role:"end-user"}]}})
+ ]},
+{id:"freshservice",cat:"itsm",name:"Freshservice",base:"https://{domain}.freshservice.com/api/v2",params:{domain:"your-company"},
+ docs:"https://api.freshservice.com/",docsLabel:"API v2 reference",spec:null,
+ auth:"API key as the Basic auth username",headers:{Authorization:"Basic BASE64(api_key:X)",Accept:"application/json"},
+ eps:[
+  E("GET","/tickets","List tickets",["ticket","tickets","incident","list","pull"],{q:{per_page:"5"},sample:{tickets:[{id:1201,subject:"Outlook keeps crashing",status:2,priority:3,created_at:"2026-11-09T16:40:00Z"}]}}),
+  E("POST","/tickets","Create a ticket",["create","new","ticket","incident","raise","log"],{body:{subject:"Need access to Figma",description:"Design team license request",email:"ana@example.com",priority:2,status:2},ss:201,sample:{ticket:{id:1202,subject:"Need access to Figma",status:2,priority:2}}}),
+  E("GET","/changes","List changes",["change","changes","cab"],{sample:{changes:[{id:45,subject:"Upgrade core switch firmware",status:1,change_type:2,planned_start_date:"2026-11-14T02:00:00Z"}]}}),
+  E("GET","/assets","List assets",["asset","assets","cmdb","inventory","devices"],{q:{per_page:"5"},sample:{assets:[{display_id:310,name:"MacBook Pro 14 ANA-LT",asset_type_id:2,impact:"low",usage_type:"permanent"}]}}),
+  E("GET","/requesters","List requesters",["user","users","requester","requesters","people"],{sample:{requesters:[{id:19000123456,first_name:"Ana",last_name:"Lopez",primary_email:"ana@example.com"}]}})
+ ]},
+{id:"bmc",cat:"itsm",name:"BMC Helix ITSM",base:"https://{server}",params:{server:"your-helix-server"},
+ docs:"https://docs.bmc.com/",docsLabel:"BMC docs portal (REST API)",spec:null,
+ auth:"Log in for a JWT, then send it as AR-JWT",headers:{Authorization:"AR-JWT YOUR_TOKEN",Accept:"application/json"},
+ eps:[
+  E("POST","/api/jwt/login","Log in and get a session token",["login","token","auth","authenticate"],{body:"username=YOUR_USER&password=YOUR_PASSWORD",sample:"eyJhbGciOiJIUzI1NiJ9.SAMPLE.TOKEN"}),
+  E("GET","/api/arsys/v1/entry/HPD:Help Desk","List incidents",["incident","incidents","ticket","tickets","list","pull"],{q:{limit:"5"},sample:{entries:[{values:{"Incident Number":"INC000000001234",Description:"Printer offline on floor 3",Status:"Assigned",Priority:"Medium"}}]}}),
+  E("POST","/api/arsys/v1/entry/HPD:IncidentInterface_Create","Create an incident",["create","new","incident","ticket","raise","log"],{body:{values:{First_Name:"Ana",Last_Name:"Lopez",Description:"Laptop will not boot",Impact:"4-Minor/Localized",Urgency:"4-Low",Status:"Assigned","Reported Source":"Direct Input",Service_Type:"User Service Restoration",z1D_Action:"CREATE"}},ss:201,sample:{values:{"Incident Number":"INC000000001240",Status:"Assigned"}}}),
+  E("GET","/api/arsys/v1/entry/CHG:Infrastructure Change","List change requests",["change","changes"],{q:{limit:"5"},sample:{entries:[{values:{"Infrastructure Change ID":"CRQ000000000512",Description:"Data center UPS maintenance","Change Request Status":"Scheduled"}}]}})
+ ]},
+/* Source code */
+{id:"github",cat:"scm",name:"GitHub",base:"https://api.github.com",params:{owner:"facebook",repo:"react"},
+ docs:"https://docs.github.com/en/rest",docsLabel:"REST API docs",spec:"https://github.com/github/rest-api-description",
+ auth:"None for public repos (60 requests per hour). Personal access token for private data and writes.",headers:{Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"},live:true,
+ eps:[
+  E("GET","/repos/{owner}/{repo}","Get repository details",["repo","repository","details","info","stars"],{mode:"live",sample:{full_name:"facebook/react",private:false,default_branch:"main",html_url:"https://github.com/facebook/react",description:"The library for web and native user interfaces."}}),
+  E("GET","/repos/{owner}/{repo}/issues","List open issues",["issue","issues","bug","bugs","ticket","tickets","open","pull"],{mode:"live",q:{state:"open",per_page:"5"},sample:[{number:0,title:"Example issue title",state:"open",user:{login:"example-user"},labels:[{name:"Type: Bug"}]}]}),
+  E("GET","/repos/{owner}/{repo}/pulls","List open pull requests",["pull request","pull requests","pr","prs","review","merge"],{mode:"live",q:{state:"open",per_page:"5"},sample:[{number:0,title:"Example pull request",state:"open",head:{ref:"feature-branch"},base:{ref:"main"}}]}),
+  E("GET","/repos/{owner}/{repo}/commits","List recent commits",["commit","commits","history","changes","activity"],{mode:"live",q:{per_page:"5"},sample:[{sha:"0000000",commit:{message:"Example commit message",author:{name:"Example Author",date:"2026-11-09T12:00:00Z"}}}]}),
+  E("POST","/repos/{owner}/{repo}/issues","Create an issue",["create","new","issue","bug","raise","file"],{body:{title:"Checkout button misaligned on mobile",body:"Steps to reproduce: open checkout on a 390px screen.",labels:["bug"]},ss:201,sample:{number:0,title:"Checkout button misaligned on mobile",state:"open",html_url:"https://github.com/OWNER/REPO/issues/NUMBER"}})
+ ]},
+{id:"gitlab",cat:"scm",name:"GitLab",base:"https://gitlab.com/api/v4",params:{id:"278964"},
+ docs:"https://docs.gitlab.com/api/rest/",docsLabel:"REST API docs",spec:null,
+ auth:"None for public projects. Personal access token (PRIVATE-TOKEN header) for private data and writes.",headers:{Accept:"application/json"},live:true,
+ eps:[
+  E("GET","/projects/{id}","Get project details",["project","repo","repository","details","info"],{mode:"live",src:"capture",sample:SNAP.gl_project}),
+  E("GET","/projects/{id}/issues","List open issues",["issue","issues","bug","bugs","ticket","tickets","open","pull"],{mode:"live",src:"capture",q:{state:"opened",per_page:"5"},sample:SNAP.gl_issues}),
+  E("GET","/projects/{id}/merge_requests","List open merge requests",["merge request","merge requests","mr","pull request","pull requests","pr","review","merge"],{mode:"live",src:"capture",q:{state:"opened",per_page:"5"},sample:SNAP.gl_mrs}),
+  E("GET","/projects/{id}/repository/commits","List recent commits",["commit","commits","history","changes","activity"],{mode:"live",src:"capture",q:{per_page:"5"},sample:SNAP.gl_commits}),
+  E("POST","/projects/{id}/issues","Create an issue",["create","new","issue","bug","raise","file"],{headers:{"PRIVATE-TOKEN":"YOUR_TOKEN"},body:{title:"Checkout button misaligned on mobile",labels:"bug"},ss:201,sample:{iid:0,title:"Checkout button misaligned on mobile",state:"opened"}})
+ ]},
+{id:"bitbucket",cat:"scm",name:"Bitbucket",base:"https://api.bitbucket.org/2.0",params:{workspace:"atlassian",repo_slug:"atlassian-event"},
+ docs:"https://developer.atlassian.com/cloud/bitbucket/rest/intro/",docsLabel:"REST API reference",spec:"https://dac-static.atlassian.com/cloud/bitbucket/swagger.v3.json",
+ auth:"None for public repos. App password, API token or OAuth 2.0 for private data and writes.",headers:{Accept:"application/json"},live:true,
+ eps:[
+  E("GET","/repositories/{workspace}/{repo_slug}","Get repository details",["repo","repository","details","info"],{mode:"live",src:"capture",q:{fields:"full_name,is_private,language,mainbranch.name,updated_on,size"},sample:SNAP.bb_repo}),
+  E("GET","/repositories/{workspace}/{repo_slug}/commits","List recent commits",["commit","commits","history","changes","activity"],{mode:"live",src:"capture",q:{pagelen:"5"},sample:SNAP.bb_commits}),
+  E("GET","/repositories/{workspace}/{repo_slug}/pullrequests","List merged pull requests",["pull request","pull requests","pr","prs","merge","merged","review"],{mode:"live",src:"capture",q:{state:"MERGED",pagelen:"5"},sample:SNAP.bb_prs}),
+  E("GET","/repositories/{workspace}/{repo_slug}/refs/branches","List branches",["branch","branches","refs"],{mode:"live",src:"capture",q:{pagelen:"5"},sample:SNAP.bb_branches}),
+  E("POST","/repositories/{workspace}/{repo_slug}/pullrequests","Open a pull request",["create","new","open","pull request","pr"],{headers:BEARER,body:{title:"Add retry to webhook handler",source:{branch:{name:"feature/retry"}},destination:{branch:{name:"master"}}},ss:201,sample:{id:0,title:"Add retry to webhook handler",state:"OPEN"}})
+ ]},
+{id:"azure",cat:"scm",name:"Azure DevOps Repos",base:"https://dev.azure.com/{organization}/{project}/_apis",params:{organization:"dnceng-public",project:"public",repositoryId:"dotnet-public-wiki"},
+ docs:"https://learn.microsoft.com/en-us/rest/api/azure/devops/git/",docsLabel:"Git REST API reference",spec:"https://github.com/MicrosoftDocs/vsts-rest-api-specs",
+ auth:"None for public projects. Personal access token or Microsoft Entra ID for private data and writes.",headers:{Accept:"application/json"},live:true,
+ eps:[
+  E("GET","/git/repositories","List repositories",["repo","repos","repository","repositories","list"],{mode:"live",src:"capture",q:{"api-version":"7.1","$top":"5"},sample:SNAP.az_repos}),
+  E("GET","/git/repositories/{repositoryId}/commits","List recent commits",["commit","commits","history","changes","activity"],{mode:"live",src:"capture",q:{"api-version":"7.1","$top":"5"},sample:SNAP.az_commits}),
+  E("GET","/git/repositories/{repositoryId}/pullrequests","List pull requests",["pull request","pull requests","pr","prs","review","merge"],{mode:"live",src:"capture",q:{"api-version":"7.1","$top":"5","searchCriteria.status":"all"},sample:SNAP.az_prs}),
+  E("GET","/git/repositories/{repositoryId}/refs","List branches",["branch","branches","refs"],{mode:"live",src:"capture",q:{"api-version":"7.1",filter:"heads/"},sample:SNAP.az_refs}),
+  E("POST","/git/repositories/{repositoryId}/pullrequests","Open a pull request",["create","new","open","pull request","pr"],{headers:{Authorization:"Basic BASE64(:personal_access_token)"},q:{"api-version":"7.1"},body:{sourceRefName:"refs/heads/feature/retry",targetRefName:"refs/heads/main",title:"Add retry to webhook handler"},ss:201,sample:{pullRequestId:0,status:"active",title:"Add retry to webhook handler"}})
+ ]},
+{id:"codecommit",cat:"scm",name:"AWS CodeCommit",base:"https://codecommit.{region}.amazonaws.com",params:{region:"us-east-1"},
+ docs:"https://docs.aws.amazon.com/codecommit/latest/APIReference/Welcome.html",docsLabel:"API reference",spec:null,
+ auth:"AWS Signature Version 4, usually through an AWS SDK. Browsers cannot sign these calls safely.",headers:{"Content-Type":"application/x-amz-json-1.1",Authorization:"AWS4-HMAC-SHA256 Credential=..."},
+ eps:[
+  E("POST","/","List repositories (ListRepositories)",["repo","repos","repository","repositories","list"],{headers:{"X-Amz-Target":"CodeCommit_20150413.ListRepositories"},body:{sortBy:"repositoryName"},sample:{repositories:[{repositoryName:"payments-service",repositoryId:"f7579e13-b83e-4027-aaef-650c0EXAMPLE"}]}}),
+  E("POST","/","Get repository details (GetRepository)",["repo","repository","details","info"],{headers:{"X-Amz-Target":"CodeCommit_20150413.GetRepository"},body:{repositoryName:"payments-service"},sample:{repositoryMetadata:{repositoryName:"payments-service",defaultBranch:"main",cloneUrlHttp:"https://git-codecommit.us-east-1.amazonaws.com/v1/repos/payments-service"}}}),
+  E("POST","/","List open pull requests (ListPullRequests)",["pull request","pull requests","pr","prs","review"],{headers:{"X-Amz-Target":"CodeCommit_20150413.ListPullRequests"},body:{repositoryName:"payments-service",pullRequestStatus:"OPEN"},sample:{pullRequestIds:["42","41"]}}),
+  E("POST","/","Get a branch (GetBranch)",["branch","branches","commit"],{headers:{"X-Amz-Target":"CodeCommit_20150413.GetBranch"},body:{repositoryName:"payments-service",branchName:"main"},sample:{branch:{branchName:"main",commitId:"3b5d8a7eEXAMPLE"}}}),
+  E("POST","/","Open a pull request (CreatePullRequest)",["create","new","open","pull request","pr"],{headers:{"X-Amz-Target":"CodeCommit_20150413.CreatePullRequest"},body:{title:"Add retry to webhook handler",targets:[{repositoryName:"payments-service",sourceReference:"feature/retry",destinationReference:"main"}]},sample:{pullRequest:{pullRequestId:"43",pullRequestStatus:"OPEN",title:"Add retry to webhook handler"}}})
+ ]},
+/* AI */
+{id:"openai",cat:"ai",name:"OpenAI",base:"https://api.openai.com/v1",params:{},
+ docs:"https://platform.openai.com/docs/api-reference",docsLabel:"API reference",spec:"https://github.com/openai/openai-openapi",
+ auth:"API key as a Bearer token",headers:{Authorization:"Bearer YOUR_OPENAI_API_KEY","Content-Type":"application/json"},
+ eps:[
+  E("GET","/models","List available models",["model","models","list"],{mode:"try",sample:{object:"list",data:[{id:"gpt-4o-mini",object:"model",owned_by:"system"},{id:"text-embedding-3-small",object:"model",owned_by:"system"}]}}),
+  E("POST","/responses","Generate a response",["generate","response","chat","prompt","summarize","completion","ask","text"],{body:{model:"gpt-4o-mini",input:"Summarize this incident in one line: VPN drops every 10 minutes for remote staff."},sample:{id:"resp_SAMPLE",object:"response",status:"completed",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:"Remote staff lose VPN connectivity every 10 minutes."}]}],usage:{input_tokens:24,output_tokens:12}}}),
+  E("POST","/chat/completions","Chat completion",["chat","completion","message","conversation"],{body:{model:"gpt-4o-mini",messages:[{role:"user",content:"Classify this ticket: Cannot access VPN"}]},sample:{id:"chatcmpl-SAMPLE",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:"Category: Network access. Priority: High."},finish_reason:"stop"}]}}),
+  E("POST","/embeddings","Create embeddings",["embed","embedding","embeddings","vector","search","similarity"],{body:{model:"text-embedding-3-small",input:"VPN drops every 10 minutes"},sample:{object:"list",data:[{object:"embedding",index:0,embedding:[0.0123,-0.0456,0.0789,"…1,533 more values"]}],usage:{prompt_tokens:6,total_tokens:6}}})
+ ]},
+{id:"anthropic",cat:"ai",name:"Anthropic",base:"https://api.anthropic.com/v1",params:{},
+ docs:"https://docs.anthropic.com/en/api/overview",docsLabel:"API reference",spec:null,
+ auth:"API key in the x-api-key header, plus anthropic-version",headers:{"x-api-key":"YOUR_ANTHROPIC_API_KEY","anthropic-version":"2023-06-01","content-type":"application/json"},
+ eps:[
+  E("GET","/models","List available models",["model","models","list"],{mode:"try",headers:{"anthropic-dangerous-direct-browser-access":"true"},sample:{data:[{type:"model",id:"claude-sonnet-4-5",display_name:"Claude Sonnet 4.5"}],has_more:false}}),
+  E("POST","/messages","Send a message",["generate","message","messages","chat","prompt","summarize","completion","ask","classify","text"],{body:{model:"claude-sonnet-4-5",max_tokens:200,messages:[{role:"user",content:"Classify this ticket: Cannot access VPN"}]},sample:{id:"msg_SAMPLE",type:"message",role:"assistant",content:[{type:"text",text:"Category: Network access. Priority: High."}],stop_reason:"end_turn",usage:{input_tokens:18,output_tokens:14}}}),
+  E("POST","/messages/count_tokens","Count tokens before sending",["token","tokens","count","cost"],{body:{model:"claude-sonnet-4-5",messages:[{role:"user",content:"Classify this ticket: Cannot access VPN"}]},sample:{input_tokens:18}}),
+  E("POST","/messages/batches","Send a batch of messages",["batch","bulk","many"],{body:{requests:[{custom_id:"ticket-1",params:{model:"claude-sonnet-4-5",max_tokens:200,messages:[{role:"user",content:"Classify: Cannot access VPN"}]}}]},sample:{id:"msgbatch_SAMPLE",type:"message_batch",processing_status:"in_progress",request_counts:{processing:1,succeeded:0,errored:0}}})
+ ]},
+{id:"gemini",cat:"ai",name:"Google Gemini",base:"https://generativelanguage.googleapis.com/v1beta",params:{model:"gemini-2.5-flash"},
+ docs:"https://ai.google.dev/api",docsLabel:"Gemini API reference",spec:null,
+ auth:"API key in the x-goog-api-key header",headers:{"x-goog-api-key":"YOUR_GEMINI_API_KEY","Content-Type":"application/json"},
+ eps:[
+  E("GET","/models","List available models",["model","models","list"],{mode:"try",sample:{models:[{name:"models/gemini-2.5-flash",displayName:"Gemini 2.5 Flash",supportedGenerationMethods:["generateContent","countTokens"]}]}}),
+  E("POST","/models/{model}:generateContent","Generate content",["generate","content","chat","prompt","summarize","completion","ask","text"],{body:{contents:[{parts:[{text:"Summarize this incident in one line: VPN drops every 10 minutes for remote staff."}]}]},sample:{candidates:[{content:{role:"model",parts:[{text:"Remote staff lose VPN access every 10 minutes."}]},finishReason:"STOP"}],usageMetadata:{promptTokenCount:20,candidatesTokenCount:11}}}),
+  E("POST","/models/{model}:countTokens","Count tokens",["token","tokens","count","cost"],{body:{contents:[{parts:[{text:"Cannot access VPN"}]}]},sample:{totalTokens:5}}),
+  E("POST","/models/{model}:embedContent","Create an embedding",["embed","embedding","embeddings","vector","similarity"],{params:{model:"gemini-embedding-001"},body:{content:{parts:[{text:"VPN drops every 10 minutes"}]}},sample:{embedding:{values:[0.0131,-0.0224,0.0487,"…more values"]}}})
+ ]},
+{id:"mistral",cat:"ai",name:"Mistral AI",base:"https://api.mistral.ai/v1",params:{},
+ docs:"https://docs.mistral.ai/api/",docsLabel:"API reference",spec:null,
+ auth:"API key as a Bearer token",headers:{Authorization:"Bearer YOUR_MISTRAL_API_KEY","Content-Type":"application/json"},
+ eps:[
+  E("GET","/models","List available models",["model","models","list"],{mode:"try",sample:{object:"list",data:[{id:"mistral-small-latest",object:"model",owned_by:"mistralai"},{id:"mistral-embed",object:"model",owned_by:"mistralai"}]}}),
+  E("POST","/chat/completions","Chat completion",["generate","chat","completion","prompt","summarize","ask","message","text"],{body:{model:"mistral-small-latest",messages:[{role:"user",content:"Classify this ticket: Cannot access VPN"}]},sample:{id:"cmpl-SAMPLE",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:"Network access issue, high priority."},finish_reason:"stop"}]}}),
+  E("POST","/embeddings","Create embeddings",["embed","embedding","embeddings","vector","similarity"],{body:{model:"mistral-embed",input:["VPN drops every 10 minutes"]},sample:{object:"list",data:[{object:"embedding",index:0,embedding:[0.021,-0.008,0.044,"…more values"]}]}}),
+  E("POST","/fim/completions","Code completion (fill in the middle)",["code","fill","autocomplete","completion"],{body:{model:"codestral-latest",prompt:"def add(a, b):\n    ",suffix:"\n    return result"},sample:{id:"cmpl-SAMPLE",choices:[{index:0,message:{role:"assistant",content:"result = a + b"}}]}})
+ ]},
+{id:"cohere",cat:"ai",name:"Cohere",base:"https://api.cohere.com",params:{},
+ docs:"https://docs.cohere.com/reference/about",docsLabel:"API reference",spec:null,
+ auth:"API key as a Bearer token",headers:{Authorization:"Bearer YOUR_COHERE_API_KEY","Content-Type":"application/json"},
+ eps:[
+  E("GET","/v1/models","List available models",["model","models","list"],{mode:"try",sample:{models:[{name:"command-a-03-2025",endpoints:["chat"],context_length:256000},{name:"rerank-v3.5",endpoints:["rerank"]}]}}),
+  E("POST","/v2/chat","Chat",["generate","chat","prompt","summarize","completion","ask","message","text"],{body:{model:"command-a-03-2025",messages:[{role:"user",content:"Classify this ticket: Cannot access VPN"}]},sample:{id:"SAMPLE",finish_reason:"COMPLETE",message:{role:"assistant",content:[{type:"text",text:"Network access issue, high priority."}]}}}),
+  E("POST","/v2/embed","Create embeddings",["embed","embedding","embeddings","vector","similarity"],{body:{model:"embed-v4.0",texts:["VPN drops every 10 minutes"],input_type:"search_document",embedding_types:["float"]},sample:{embeddings:{float:[[0.016,-0.031,0.052,"…more values"]]}}}),
+  E("POST","/v2/rerank","Rerank documents by relevance",["rerank","rank","search","relevance","sort"],{body:{model:"rerank-v3.5",query:"VPN outage",documents:["VPN drops every 10 minutes","Printer offline on floor 3"]},sample:{results:[{index:0,relevance_score:0.98},{index:1,relevance_score:0.02}]}})
+ ]}
+];
+const CATS = [["itsm","ITSM"],["scm","Source code"],["ai","AI tools"]];
+const ALIASES = {servicenow:["servicenow","service now","snow"],jsm:["jira service management","jira service","jsm","jira"],zendesk:["zendesk"],freshservice:["freshservice","freshworks"],bmc:["bmc","helix","remedy"],
+  github:["github"],gitlab:["gitlab"],bitbucket:["bitbucket"],azure:["azure devops","azure repos","azure","ado","vsts"],codecommit:["codecommit","code commit","aws"],
+  openai:["openai","open ai","chatgpt","gpt"],anthropic:["anthropic","claude"],gemini:["gemini","google"],mistral:["mistral","codestral"],cohere:["cohere"]};
+const CAT_WORDS = {itsm:["incident","incidents","ticket","tickets","change request","sla","service desk","helpdesk","help desk","asset","requester"],scm:["repo","repos","repository","commit","commits","pull request","merge request","branch","code review","pr"],ai:["model","models","llm","chat","prompt","embedding","embeddings","summarize","classify","generate","ai","tokens","rerank"]};
+const EXAMPLES = ["Pull open issues from GitLab","List merged pull requests in Bitbucket","Get recent commits from Azure DevOps","Create a ServiceNow incident","Classify tickets with Anthropic","Embed documents with Cohere"];
+
+/* ---------- State ---------- */
+const S = {vendor:"gitlab", ep:1, query:"Pull open issues from GitLab", matches:[], params:{}, qv:{}, resp:null, tab:"body", sending:false};
+VENDORS.forEach(v=>{S.params[v.id]=Object.assign({},v.params);});
+
+const $ = id=>document.getElementById(id);
+const esc = v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const V = ()=>VENDORS.find(v=>v.id===S.vendor);
+const EP = ()=>V().eps[S.ep];
+const epKey = ()=>S.vendor+":"+S.ep;
+const isLiveVendor = v=>v.eps.some(e=>e.mode==="live");
+
+/* ---------- Matching ---------- */
+function hasWord(text,w){return new RegExp("(^|[^a-z0-9])"+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"($|[^a-z0-9])").test(text);}
+function detectVendor(text){
+  let best=null,len=0;
+  Object.keys(ALIASES).forEach(id=>ALIASES[id].forEach(a=>{if(hasWord(text,a)&&a.length>len){best=id;len=a.length;}}));
+  return best;
+}
+function scoreEp(ep,text){
+  let s=0; ep.tags.forEach(t=>{if(hasWord(text,t))s+=t.indexOf(" ")>-1?2:1;});
+  const wantsWrite=/\b(create|new|add|open a|raise|log a|file|submit|update|resolve|close|send|generate|classify|embed|summarize|rerank|count)\b/.test(text);
+  if(wantsWrite && ep.m!=="GET") s+=1;
+  if(!wantsWrite && ep.m==="GET") s+=0.5;
+  return s;
+}
+function runQuery(text){
+  const t=(text||"").toLowerCase().trim();
+  S.query=text;
+  if(!t){S.matches=[];renderAll();return;}
+  let vid=detectVendor(t);
+  if(!vid){
+    let cat=null,cs=0;
+    Object.keys(CAT_WORDS).forEach(c=>{const n=CAT_WORDS[c].filter(w=>hasWord(t,w)).length;if(n>cs){cs=n;cat=c;}});
+    S.noVendor = cat ? CATS.find(x=>x[0]===cat)[1] : "any";
+    S.matches=[]; renderAll(); return;
+  }
+  S.noVendor=null; S.vendor=vid;
+  const scored=V().eps.map((e,i)=>({i,s:scoreEp(e,t)})).filter(x=>x.s>=1).sort((a,b)=>b.s-a.s);
+  S.matches=scored.map(x=>x.i);
+  selectEp(S.matches.length?S.matches[0]:0);
+}
+function selectEp(i){
+  S.ep=i; S.tab="body";
+  const ep=EP();
+  if(!S.qv[epKey()]) S.qv[epKey()]=Object.assign({},ep.q);
+  S.params[S.vendor]=Object.assign({},V().params,ep.params||{});
+  S.resp = ep.sample!==undefined && ep.sample!==null ? sampleResp(ep, true) : null;
+  renderAll();
+}
+
+/* ---------- Request building ---------- */
+function pathParams(){
+  const v=V(), ep=EP(), names=[]; const re=/\{([^}]+)\}/g; let m;
+  const all=v.base+ep.p;
+  while((m=re.exec(all))){if(names.indexOf(m[1])===-1)names.push(m[1]);}
+  return names;
+}
+function buildUrl(){
+  const v=V(), ep=EP(), pv=S.params[v.id];
+  let u=(v.base+ep.p).replace(/\{([^}]+)\}/g,(x,k)=>encodeURIComponent(pv[k]!=null&&pv[k]!==""?pv[k]:k).replace(/%3A/gi,":"));
+  if(ep.p.indexOf("/api/arsys")===0) u=u.replace(/ /g,"%20");
+  const q=S.qv[epKey()]||ep.q, parts=Object.keys(q).filter(k=>q[k]!=="").map(k=>encodeURIComponent(k).replace(/%24/g,"$")+"="+encodeURIComponent(q[k]).replace(/%2C/g,",").replace(/%3A/g,":"));
+  return u+(parts.length?"?"+parts.join("&"):"");
+}
+function reqHeaders(){return Object.assign({},V().headers,EP().headers||{});}
+function curl(){
+  const ep=EP(), h=reqHeaders();
+  let c=`curl -X ${ep.m} "${buildUrl()}"`;
+  Object.keys(h).forEach(k=>{c+=` \\\n  -H "${k}: ${h[k]}"`;});
+  if(ep.body!=null) c+=` \\\n  -d '${typeof ep.body==="string"?ep.body:JSON.stringify(ep.body)}'`;
+  return c;
+}
+
+/* ---------- Responses ---------- */
+function bodyText(b){return typeof b==="string"?b:JSON.stringify(b,null,2);}
+function sampleResp(ep, initial){
+  const t=bodyText(ep.sample);
+  const kind = ep.src==="capture" ? "capture" : "sample";
+  return {kind, status:ep.ss||200, statusText:ep.ss===201?"Created":"OK", ms:null, size:t.length, headers:[["content-type", typeof ep.sample==="string"?"text/plain":"application/json"]], body:t, initial:!!initial};
+}
+async function send(liveTry){
+  const ep=EP(), v=V();
+  if(ep.mode==="key" || (ep.mode==="try" && !liveTry)){
+    S.resp=sampleResp(ep,false); S.tab="body"; renderTester(); return;
+  }
+  S.sending=true; renderTester();
+  const url=buildUrl(), t0=performance.now();
+  const hdr={}; const h=reqHeaders();
+  Object.keys(h).forEach(k=>{ if(!/YOUR_|BASE64|Credential=/.test(h[k])) hdr[k]=h[k]; });
+  try{
+    const ctrl=new AbortController(); const tm=setTimeout(()=>ctrl.abort(),12000);
+    const r=await fetch(url,{method:"GET",headers:hdr,signal:ctrl.signal}); clearTimeout(tm);
+    const txt=await r.text(); const ms=Math.round(performance.now()-t0);
+    let pretty=txt; try{pretty=JSON.stringify(JSON.parse(txt),null,2);}catch(e){}
+    const headers=[]; r.headers.forEach((val,key)=>headers.push([key,val]));
+    const cut = pretty.length>60000 ? pretty.slice(0,60000)+"\n… response truncated for display" : pretty;
+    S.resp={kind:"live",status:r.status,statusText:r.statusText,ms,size:txt.length,headers,body:cut,host:new URL(url).host,noKey:ep.mode==="try"};
+  }catch(e){
+    S.resp={kind:"blocked",host:new URL(url).host,ms:Math.round(performance.now()-t0),timeout:e&&e.name==="AbortError"};
+  }
+  S.sending=false; S.tab="body"; renderTester();
+}
+
+/* ---------- Render ---------- */
+function renderGroups(){
+  $("groups").innerHTML=CATS.map(([c,label])=>`<div class="group"><span class="label">${label}</span><div class="vlist">${VENDORS.filter(v=>v.cat===c).map(v=>`<button type="button" class="vbtn" data-vendor="${v.id}" aria-pressed="${S.vendor===v.id}"><span class="vname">${esc(v.name)}</span><span class="tag ${isLiveVendor(v)?"live":""}">${isLiveVendor(v)?"Live, no key":"Needs key"}</span></button>`).join("")}</div></div>`).join("");
+}
+function renderVendor(){
+  const v=V(), p=$("vendorPane");
+  let h="";
+  if(S.noVendor){
+    h+=`<div class="notice"><span>Plugline couldn't tell which tool you mean. Pick one from ${S.noVendor==="any"?"the lists above":"the "+esc(S.noVendor)+" list above"}, or name it in your request, for example "${S.noVendor==="ITSM"?"Create a ServiceNow incident":S.noVendor==="AI tools"?"Summarize text with OpenAI":"List commits in GitHub"}".</span></div>`;
+  }
+  const n=v.eps.length, k=S.matches.length;
+  h+=`<div class="vhead"><span class="label">${esc(CATS.find(c=>c[0]===v.cat)[1])}</span><h2>${esc(v.name)}</h2>
+    <div class="links"><a href="${esc(v.docs)}" target="_blank" rel="noopener">${esc(v.docsLabel)} ↗</a>${v.spec?`<a href="${esc(v.spec)}" target="_blank" rel="noopener">OpenAPI spec ↗</a>`:""}</div></div>`;
+  h+=`<ul class="found"><li>Found the official ${esc(v.name)} API reference</li><li>Read ${n} common endpoints from it</li>${S.query&&!S.noVendor&&detectVendor(S.query.toLowerCase())===v.id?`<li>${k?`${k} match "${esc(S.query)}"`:`None matched "${esc(S.query)}" exactly, so all are listed`}</li>`:""}</ul>`;
+  h+=`<dl class="meta"><dt>Base URL</dt><dd>${esc(v.base)}</dd><dt>Auth</dt><dd style="font-family:var(--font-sans);font-size:13px">${esc(v.auth)}</dd></dl>`;
+  const order=S.matches.concat(v.eps.map((e,i)=>i).filter(i=>S.matches.indexOf(i)===-1));
+  h+=`<div class="eps">${order.map(i=>{const e=v.eps[i];return `<button type="button" class="ep" data-ep="${i}" aria-pressed="${S.ep===i}"><span class="m ${e.m}">${e.m}</span><span><span class="path">${esc(e.p==="/"&&e.headers&&e.headers["X-Amz-Target"]?"/ "+e.headers["X-Amz-Target"].split(".")[1]:e.p)}</span><br><span class="sum">${esc(e.s)}</span>${S.matches.indexOf(i)>-1?'<span class="match">matches your request</span>':""}</span><span class="tag ${e.mode==="live"?"live":""}">${e.mode==="live"?"Live":"Key"}</span></button>`;}).join("")}</div>`;
+  p.innerHTML=h;
+}
+function renderTester(){
+  const v=V(), ep=EP(), p=$("testerPane"), r=S.resp;
+  const pp=pathParams(), q=S.qv[epKey()]||ep.q, h=reqHeaders();
+  let out=`<div class="row" style="justify-content:space-between"><span class="label">Request</span><button class="btn small" type="button" id="copyCurl">Copy as cURL</button></div>`;
+  out+=`<div class="urlbar"><span class="m ${ep.m}">${ep.m}</span><div class="url" id="urlText">${esc(buildUrl())}</div></div>`;
+  if(pp.length||Object.keys(q).length){
+    out+=`<div class="params">${pp.map(k=>`<label>${esc(k)}<input type="text" data-pp="${esc(k)}" id="pp-${esc(k)}" value="${esc(S.params[v.id][k]||"")}"></label>`).join("")}${Object.keys(q).map(k=>`<label>?${esc(k)}<input type="text" data-qp="${esc(k)}" id="qp-${esc(k).replace(/[^a-z0-9]/gi,"_")}" value="${esc(q[k])}"></label>`).join("")}</div>`;
+  }
+  out+=`<div class="hdrs">${Object.keys(h).map(k=>`<span><span class="k">${esc(k)}:</span> ${esc(h[k])}</span>`).join("")}${ep.mode==="live"?'<span class="k">No key needed for this public data.</span>':""}</div>`;
+  if(ep.body!=null) out+=`<pre class="code" aria-label="Request body">${esc(bodyText(ep.body))}</pre>`;
+  const sendLabel = ep.mode==="live"?"Send live request":"Show sample response";
+  out+=`<div class="row"><button class="btn primary" type="button" id="sendBtn" ${S.sending?"disabled":""}>${S.sending?"Sending…":sendLabel}</button>${ep.mode==="try"?`<button class="btn" type="button" id="tryLive" ${S.sending?"disabled":""}>Try live without a key</button>`:""}<span class="hint">${ep.mode==="live"?`Calls ${esc(new URL(buildUrl()).host)} directly from your browser.`:ep.mode==="try"?"A live call without a key returns the vendor's real error, if the browser allows it.":"Needs your own credentials, so this shows a sample."}</span></div>`;
+
+  out+=`<span class="label" style="margin-top:6px">Response</span>`;
+  if(!r){ out+=`<p class="empty">Press the button above to see a response.</p>`; }
+  else if(r.kind==="blocked"){
+    out+=`<div class="notice bad"><strong>The browser stopped this request before it reached ${esc(r.host)}.</strong>
+      <span>${r.timeout?"The vendor did not answer within 12 seconds.":"The Claude preview blocks every outside call, so open the hosted copy of this page to run it live. On a hosted page this error means the vendor does not allow direct browser calls (CORS), and a production build would route the call through a small server."}</span>
+      ${ep.sample!=null?`<div class="row"><button class="btn small" type="button" id="showSample">Show ${ep.src==="capture"?"captured":"sample"} response instead</button></div>`:""}</div>`;
+  } else {
+    const err=r.status>=400;
+    const srcLabel = r.kind==="live" ? `Live response from ${esc(r.host)}${r.noKey&&err?", which needs an API key":""}` : r.kind==="capture" ? `Captured from the live API on ${CAPTURED}${ep.mode==="live"?". Press Send to run it now.":""}` : `Sample response based on ${esc(v.name)}'s docs. Not a live call.`;
+    out+=`<div class="resp-head"><span class="status ${err?"err":""}">${r.status} ${esc(r.statusText||"")}</span>${r.ms!=null?`<span class="rmeta">${r.ms} ms</span>`:""}<span class="rmeta">${fmtSize(r.size)}</span><span class="src ${r.kind==="live"?"live":""}">${srcLabel}</span></div>`;
+    out+=`<div class="tabs" role="tablist"><button class="tab" role="tab" type="button" data-tab="body" aria-selected="${S.tab==="body"}">Body</button><button class="tab" role="tab" type="button" data-tab="headers" aria-selected="${S.tab==="headers"}">Headers (${r.headers.length})</button></div>`;
+    out+= S.tab==="body" ? `<pre class="code">${esc(r.body)}</pre>` : `<pre class="code">${esc(r.headers.map(x=>x[0]+": "+x[1]).join("\n")||"No headers exposed to the browser.")}</pre>`;
+  }
+  p.innerHTML=out;
+}
+function fmtSize(n){return n==null?"":n<1024?n+" B":(n/1024).toFixed(1)+" KB";}
+function renderAll(){renderGroups();renderVendor();renderTester();}
+
+/* ---------- Events ---------- */
+$("examples").insertAdjacentHTML("beforeend",EXAMPLES.map(x=>`<button type="button" class="ex" data-example="${esc(x)}">${esc(x)}</button>`).join(""));
+$("searchForm").addEventListener("submit",e=>{e.preventDefault();runQuery($("q").value);});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return; const d=b.dataset;
+  if(d.example){$("q").value=d.example;runQuery(d.example);return;}
+  if(d.vendor){S.vendor=d.vendor;S.matches=[];S.noVendor=null;S.query="";selectEp(0);return;}
+  if(d.ep!==undefined){selectEp(+d.ep);return;}
+  if(d.tab){S.tab=d.tab;renderTester();return;}
+  if(b.id==="sendBtn"){send(false);return;}
+  if(b.id==="tryLive"){send(true);return;}
+  if(b.id==="showSample"){S.resp=sampleResp(EP(),false);renderTester();return;}
+  if(b.id==="copyCurl"){
+    const txt=curl();
+    const done=()=>{b.textContent="Copied";setTimeout(()=>{b.textContent="Copy as cURL";},1400);};
+    const fail=()=>{const el=$("urlText");const rg=document.createRange();rg.selectNodeContents(el);const s=window.getSelection();s.removeAllRanges();s.addRange(rg);b.textContent="Copy blocked, URL selected";};
+    try{navigator.clipboard.writeText(txt).then(done,fail);}catch(err){fail();}
+  }
+});
+document.addEventListener("input",e=>{
+  const t=e.target, d=t.dataset;
+  if(d.pp!==undefined){S.params[S.vendor][d.pp]=t.value;$("urlText").textContent=buildUrl();return;}
+  if(d.qp!==undefined){const k=epKey(); if(!S.qv[k])S.qv[k]=Object.assign({},EP().q); S.qv[k][d.qp]=t.value; $("urlText").textContent=buildUrl();}
+});
+
+/* ---------- Boot: a real request already loaded ---------- */
+$("q").value=S.query;
+runQuery(S.query);
+})();
+</script>
+<style>
+/* Portfolio copy: back link and phone touch targets */
+.pf-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;margin:8px 12px 0;border-radius:2px;border:1px solid var(--line);background:var(--surface);color:var(--fg,var(--ink));font:600 14px/1 var(--font-sans,system-ui);text-decoration:none}
+.pf-back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (pointer:coarse){
+  button,select,summary,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]){min-height:44px}
+}
+</style>
+</body>
+</html>
